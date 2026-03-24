@@ -69,6 +69,19 @@ create table public.assessment_responses (
   unique(assessment_id, safeguard_id)
 );
 
+-- App Users (assessors and known contacts — does NOT require a Supabase Auth account)
+-- This is separate from `profiles` (which is linked to auth.users).
+-- Use this table for user management in the admin panel.
+create table public.app_users (
+  id uuid primary key default uuid_generate_v4(),
+  email text not null unique,
+  organization_id uuid references public.organizations(id) on delete set null,
+  role text default 'user' check (role in ('admin', 'user')),
+  notes text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- Row Level Security
 alter table public.organizations enable row level security;
 alter table public.profiles enable row level security;
@@ -116,6 +129,19 @@ create policy "Public can create and view assessments by session" on public.asse
   for all using (true)
   with check (true);
 
+-- App Users Policies
+alter table public.app_users enable row level security;
+
+create policy "Public can view app_users" on public.app_users
+  for select using (true);
+
+create policy "Admins manage app_users" on public.app_users
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  ) with check (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
 -- Assessment Response Policies
 create policy "Responses are session-scoped" on public.assessment_responses
   for all using (true)
@@ -160,6 +186,52 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Updated-at trigger for app_users
+create trigger handle_app_users_updated_at
+  before update on public.app_users
+  for each row execute procedure public.handle_updated_at();
+
+-- ─── Admin Bootstrap Function ──────────────────────────────────────────────────
+-- Allows the FIRST user to promote themselves to admin.
+-- Safe: only succeeds when no admin exists yet in profiles.
+-- Call via: supabase.rpc('make_first_admin')
+create or replace function public.make_first_admin()
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  admin_count int;
+begin
+  select count(*) into admin_count
+  from public.profiles
+  where role = 'admin';
+
+  if admin_count > 0 then
+    return json_build_object(
+      'success', false,
+      'message', 'An admin already exists. Ask them to update your role, or run the SQL manually in Supabase.'
+    );
+  end if;
+
+  update public.profiles
+  set role = 'admin'
+  where id = auth.uid();
+
+  return json_build_object(
+    'success', true,
+    'message', 'Admin access granted. You can now manage organizations, assessments, and users.'
+  );
+end;
+$$;
+
+-- ─── Manual Admin Setup (run in Supabase SQL Editor) ──────────────────────────
+-- If make_first_admin() doesn't work, run this manually replacing the email:
+--
+--   UPDATE profiles SET role = 'admin' WHERE email = 'your@email.com';
+--
+-- ─────────────────────────────────────────────────────────────────────────────
 
 -- Seed a demo organization
 insert into public.organizations (name, code, industry, contact_email)

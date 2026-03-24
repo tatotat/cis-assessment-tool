@@ -333,11 +333,30 @@ export async function getAllUsers() {
     });
     return { data: users, error: null };
   }
+  // Use app_users table (does not require Supabase Auth account)
   const { data, error } = await supabase
-    .from('profiles')
-    .select('*, organizations(*)')
+    .from('app_users')
+    .select('*, organizations(name, code)')
     .order('created_at', { ascending: false });
-  return { data, error };
+  if (error) return { data: null, error };
+
+  // Enrich with assessment counts
+  const emails = (data || []).map(u => u.email);
+  let countMap = {};
+  if (emails.length > 0) {
+    const { data: asmData } = await supabase
+      .from('assessments')
+      .select('assessor_email')
+      .in('assessor_email', emails);
+    (asmData || []).forEach(a => {
+      countMap[a.assessor_email] = (countMap[a.assessor_email] || 0) + 1;
+    });
+  }
+
+  return {
+    data: (data || []).map(u => ({ ...u, assessment_count: countMap[u.email] || 0 })),
+    error: null,
+  };
 }
 
 export async function createUser(email, orgId, role = 'user') {
@@ -356,10 +375,15 @@ export async function createUser(email, orgId, role = 'user') {
     _db.users.push(newUser);
     return { data: newUser, error: null };
   }
+  // Insert into app_users (no Supabase Auth dependency — just a registry of known users)
   const { data, error } = await supabase
-    .from('profiles')
-    .insert([{ email, organization_id: orgId, role }])
-    .select()
+    .from('app_users')
+    .insert([{
+      email: email.toLowerCase().trim(),
+      organization_id: orgId || null,
+      role,
+    }])
+    .select('*, organizations(name, code)')
     .single();
   return { data, error };
 }
@@ -372,7 +396,7 @@ export async function updateUser(id, updates) {
     return { data: _db.users[idx], error: null };
   }
   const { data, error } = await supabase
-    .from('profiles')
+    .from('app_users')
     .update(updates)
     .eq('id', id)
     .select()
@@ -385,6 +409,47 @@ export async function deleteUser(id) {
     _db.users = _db.users.filter(u => u.id !== id);
     return { error: null };
   }
-  const { error } = await supabase.from('profiles').delete().eq('id', id);
+  const { error } = await supabase.from('app_users').delete().eq('id', id);
   return { error };
+}
+
+// ─── Supabase diagnostics & admin setup ───────────────────────────────────────
+
+/** Quick connection test — verifies the Supabase credentials work. */
+export async function testConnection() {
+  if (IS_DEMO_MODE) return { ok: true, mode: 'demo', message: 'Running in offline demo mode.' };
+  try {
+    const { error } = await supabase.from('organizations').select('id').limit(1);
+    if (error) return { ok: false, mode: 'production', message: error.message };
+    return { ok: true, mode: 'production', message: 'Connected to Supabase successfully.' };
+  } catch (e) {
+    return { ok: false, mode: 'production', message: e.message };
+  }
+}
+
+/**
+ * Check if the currently signed-in user has admin role in profiles.
+ * Returns { isAdmin: bool, email: string|null }
+ */
+export async function checkIsAdmin() {
+  if (IS_DEMO_MODE) return { isAdmin: true, email: 'admin@demo.com' };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { isAdmin: false, email: null };
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, email')
+    .eq('id', user.id)
+    .single();
+  return { isAdmin: profile?.role === 'admin', email: profile?.email || user.email };
+}
+
+/**
+ * Claim admin access for the first user. Calls the make_first_admin() RPC
+ * which only works when NO admin exists yet. Returns { success, message }.
+ */
+export async function claimFirstAdmin() {
+  if (IS_DEMO_MODE) return { success: false, message: 'Not available in demo mode.' };
+  const { data, error } = await supabase.rpc('make_first_admin');
+  if (error) return { success: false, message: error.message };
+  return data || { success: false, message: 'No response from server.' };
 }

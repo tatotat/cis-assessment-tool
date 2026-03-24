@@ -7,17 +7,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Primary uses CSS variables so the color can be changed at runtime
+        // without rebuilding. Set --primary-NNN as space-separated RGB channels
+        // (e.g. "13 74 74") in :root. See src/index.css for defaults and
+        // src/lib/settings.js applyPrimaryColor() for the runtime setter.
         primary: {
-          50: '#f0fafa',
-          100: '#ccefef',
-          200: '#99dfdf',
-          300: '#66cfcf',
-          400: '#33bfbf',
-          500: '#1a6b6b',
-          600: '#0d4a4a',
-          700: '#0a3838',
-          800: '#072626',
-          900: '#031414',
+          50:  'rgb(var(--primary-50)  / <alpha-value>)',
+          100: 'rgb(var(--primary-100) / <alpha-value>)',
+          200: 'rgb(var(--primary-200) / <alpha-value>)',
+          300: 'rgb(var(--primary-300) / <alpha-value>)',
+          400: 'rgb(var(--primary-400) / <alpha-value>)',
+          500: 'rgb(var(--primary-500) / <alpha-value>)',
+          600: 'rgb(var(--primary-600) / <alpha-value>)',
+          700: 'rgb(var(--primary-700) / <alpha-value>)',
+          800: 'rgb(var(--primary-800) / <alpha-value>)',
+          900: 'rgb(var(--primary-900) / <alpha-value>)',
         },
         accent: {
           50: '#f0faf5',

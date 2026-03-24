@@ -281,6 +281,7 @@ const useAssessmentStore = create(
         currentIndex: state.currentIndex,
         responses: state.responses,
         status: state.status,
+        adminUser: state.adminUser, // persisted so demo sessions survive page refresh
       }),
     }
   )

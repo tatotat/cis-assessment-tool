@@ -4,6 +4,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Primary color CSS variables ──────────────────────────────────────────────
+   These match the original dark-teal palette. Change them at runtime by calling
+   applyPrimaryColor(hex) from src/lib/settings.js — no rebuild required.
+   Values are space-separated RGB channels (e.g. "13 74 74" for #0d4a4a).
+   ──────────────────────────────────────────────────────────────────────────── */
+:root {
+  --primary-50:  240 250 250;  /* #f0fafa */
+  --primary-100: 204 239 239;  /* #ccefef */
+  --primary-200: 153 223 223;  /* #99dfdf */
+  --primary-300: 102 207 207;  /* #66cfcf */
+  --primary-400: 51 191 191;   /* #33bfbf */
+  --primary-500: 26 107 107;   /* #1a6b6b */
+  --primary-600: 13 74 74;     /* #0d4a4a */
+  --primary-700: 10 56 56;     /* #0a3838 */
+  --primary-800: 7 38 38;      /* #072626 */
+  --primary-900: 3 20 20;      /* #031414 */
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;

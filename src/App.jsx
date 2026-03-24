@@ -14,6 +14,10 @@ import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
 import { supabase, IS_DEMO_MODE } from './lib/supabase';
 import useAssessmentStore from './stores/assessmentStore';
+import { applyStoredBranding } from './lib/settings';
+
+// Apply stored primary color immediately on module load (before first paint)
+applyStoredBranding();
 
 function ProtectedAdminRoute({ children }) {
   const [session, setSession] = useState(undefined);
