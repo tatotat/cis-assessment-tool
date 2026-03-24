@@ -23,13 +23,17 @@ create table if not exists public.app_users (
 -- Enable RLS
 alter table public.app_users enable row level security;
 
--- Anyone can read the user list (assessment flow checks org membership by code)
-create policy if not exists "Public can view app_users"
+-- Drop policies first so this script is safe to re-run
+drop policy if exists "Public can view app_users"  on public.app_users;
+drop policy if exists "Admins manage app_users"    on public.app_users;
+
+-- Anyone can read the user list
+create policy "Public can view app_users"
   on public.app_users
   for select using (true);
 
 -- Only admins can insert / update / delete
-create policy if not exists "Admins manage app_users"
+create policy "Admins manage app_users"
   on public.app_users
   for all
   using (
@@ -45,7 +49,8 @@ create policy if not exists "Admins manage app_users"
     )
   );
 
--- Keep updated_at current
+-- Keep updated_at current (drop first so re-runs don't fail)
+drop trigger if exists handle_app_users_updated_at on public.app_users;
 create trigger handle_app_users_updated_at
   before update on public.app_users
   for each row execute procedure public.handle_updated_at();
