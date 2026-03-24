@@ -1,5 +1,7 @@
 -- CIS RAM v2.1 Assessment Tool - Database Schema
--- Run this in your Supabase SQL editor
+-- ⚠️  FRESH INSTALL ONLY — run this on a brand-new Supabase project.
+-- If you already ran this before, use supabase/migrations/001_add_app_users_and_admin_setup.sql
+-- instead to add only the new tables/functions without conflicts.
 
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
