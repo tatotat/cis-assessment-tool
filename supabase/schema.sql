@@ -92,9 +92,9 @@ alter table public.assessment_responses enable row level security;
 
 -- Organization Policies
 create policy "Admins can manage all organizations" on public.organizations
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all
+  using (public.is_admin())
+  with check (public.is_admin());
 
 create policy "Users can view their own organization" on public.organizations
   for select using (
@@ -105,6 +105,23 @@ create policy "Users can view their own organization" on public.organizations
 create policy "Public can look up organization by code" on public.organizations
   for select using (true);
 
+-- is_admin() — recursion-safe helper used by RLS policies.
+-- SECURITY DEFINER runs as postgres (bypasses RLS internally),
+-- so querying profiles inside this function does NOT re-trigger
+-- profile policies and avoids infinite recursion (error 42P17).
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
 -- Profile Policies
 create policy "Users can view their own profile" on public.profiles
   for select using (id = auth.uid());
@@ -112,10 +129,10 @@ create policy "Users can view their own profile" on public.profiles
 create policy "Users can update their own profile" on public.profiles
   for update using (id = auth.uid());
 
-create policy "Admins manage all profiles" on public.profiles
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+create policy "Admins can manage profiles" on public.profiles
+  for all
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- Assessment Policies
 create policy "Assessments are org-scoped" on public.assessments
@@ -138,11 +155,9 @@ create policy "Public can view app_users" on public.app_users
   for select using (true);
 
 create policy "Admins manage app_users" on public.app_users
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  ) with check (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
+  for all
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- Assessment Response Policies
 create policy "Responses are session-scoped" on public.assessment_responses
