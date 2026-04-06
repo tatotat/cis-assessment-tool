@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Save, Eye, Shield, Palette, FileText, CheckSquare,
   Database, CheckCircle, XCircle, AlertTriangle, RefreshCw,
-  Copy, Check, ExternalLink
+  Copy, Check, ExternalLink, AlignLeft, Mail, Globe, Users
 } from 'lucide-react';
 import { getSettings, saveSettings, applyPrimaryColor } from '../../lib/settings';
 import { IS_DEMO_MODE, testConnection, checkIsAdmin, claimFirstAdmin } from '../../lib/supabase';
@@ -208,8 +208,14 @@ function SupabaseDiagnostics() {
 export default function Settings() {
   const [settings, setSettings] = useState({
     orgDisplayName: '',
+    toolSubtitle: '',
     logoUrl: '',
     primaryColor: '',
+    footerLeft: '',
+    footerRight: '',
+    contactEmail: '',
+    contactUrl: '',
+    guestOrgCode: '',
     disclaimer: '',
     requireDisclaimerAccept: false,
     disclaimerCheckboxLabel: 'I have read and agree to the terms of this assessment',
@@ -273,7 +279,21 @@ export default function Settings() {
               className="input-field"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Replaces "CIS RAM v2.1" as the tool name shown on the home page.
+              Replaces "CIS RAM v2.1" as the tool name shown on the home page and header.
+            </p>
+          </div>
+
+          <div>
+            <label className="label">Tool Subtitle</label>
+            <input
+              type="text"
+              value={settings.toolSubtitle}
+              onChange={e => handleChange('toolSubtitle', e.target.value)}
+              placeholder="Risk Assessment Tool"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Shown below the tool name in the header. Default: "Risk Assessment Tool".
             </p>
           </div>
 
@@ -334,6 +354,102 @@ export default function Settings() {
                 <span className="text-xs text-gray-400">Live preview — changes applied immediately</span>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Text */}
+      <div className="card">
+        <div className="card-header flex items-center gap-2">
+          <AlignLeft className="w-4 h-4 text-primary-600" />
+          <h2 className="font-semibold text-gray-800">Footer Text</h2>
+        </div>
+        <div className="card-body space-y-4">
+          <div>
+            <label className="label">Footer Left Text</label>
+            <input
+              type="text"
+              value={settings.footerLeft}
+              onChange={e => handleChange('footerLeft', e.target.value)}
+              placeholder="CIS RAM v2.1 Risk Assessment Tool — Based on CIS Controls v8.1"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Displayed on the left side of the footer bar.
+            </p>
+          </div>
+          <div>
+            <label className="label">Footer Right Text</label>
+            <input
+              type="text"
+              value={settings.footerRight}
+              onChange={e => handleChange('footerRight', e.target.value)}
+              placeholder="Center for Internet Security"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Displayed on the right side of the footer bar.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Information */}
+      <div className="card">
+        <div className="card-header flex items-center gap-2">
+          <Mail className="w-4 h-4 text-primary-600" />
+          <h2 className="font-semibold text-gray-800">Contact Information</h2>
+        </div>
+        <div className="card-body space-y-4">
+          <div>
+            <label className="label">Contact Email</label>
+            <input
+              type="email"
+              value={settings.contactEmail}
+              onChange={e => handleChange('contactEmail', e.target.value)}
+              placeholder="support@example.com"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Shown as a clickable <code className="bg-gray-100 px-1 rounded">mailto:</code> link in the footer. Leave blank to hide.
+            </p>
+          </div>
+          <div>
+            <label className="label">Contact URL</label>
+            <input
+              type="url"
+              value={settings.contactUrl}
+              onChange={e => handleChange('contactUrl', e.target.value)}
+              placeholder="https://example.com/contact"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Shown as a clickable link in the footer. Leave blank to hide.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Guest Access */}
+      <div className="card">
+        <div className="card-header flex items-center gap-2">
+          <Users className="w-4 h-4 text-primary-600" />
+          <h2 className="font-semibold text-gray-800">Guest Access</h2>
+        </div>
+        <div className="card-body space-y-4">
+          <div>
+            <label className="label">Guest Organization Code</label>
+            <input
+              type="text"
+              value={settings.guestOrgCode}
+              onChange={e => handleChange('guestOrgCode', e.target.value.toUpperCase())}
+              placeholder="e.g. GUEST or DEMO001"
+              className="input-field font-mono uppercase"
+              maxLength={20}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              When set, a "Continue as Guest" link appears on the home page. Guests are assigned to this organization code automatically. The org code must exist in your organizations list. Leave blank to disable guest access.
+            </p>
           </div>
         </div>
       </div>

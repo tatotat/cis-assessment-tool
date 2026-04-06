@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { Shield, ChevronRight, LayoutDashboard, Mail, Globe } from 'lucide-react';
 import useAssessmentStore from '../stores/assessmentStore';
+import { getSettings } from '../lib/settings';
 
 const steps = [
   { path: '/', label: 'Identify', step: 1 },
@@ -14,6 +15,7 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { status, sessionId, reset } = useAssessmentStore();
+  const settings = useMemo(() => getSettings(), []);
 
   const currentStep = steps.findIndex(s => s.path === location.pathname) + 1 || 1;
 
@@ -31,12 +33,25 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <div className="bg-white/20 rounded-lg p-1.5">
-                <Shield className="w-6 h-6" />
-              </div>
+              {settings.logoUrl ? (
+                <img
+                  src={settings.logoUrl}
+                  alt={settings.orgDisplayName || 'CIS RAM v2.1'}
+                  className="h-8 object-contain"
+                  onError={e => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <div className="bg-white/20 rounded-lg p-1.5">
+                  <Shield className="w-6 h-6" />
+                </div>
+              )}
               <div>
-                <div className="font-bold text-lg leading-tight">CIS RAM v2.1</div>
-                <div className="text-xs text-primary-200 leading-tight">Risk Assessment Tool</div>
+                <div className="font-bold text-lg leading-tight">
+                  {settings.orgDisplayName || 'CIS RAM v2.1'}
+                </div>
+                <div className="text-xs text-primary-200 leading-tight">
+                  {settings.toolSubtitle || 'Risk Assessment Tool'}
+                </div>
               </div>
             </Link>
 
@@ -112,8 +127,30 @@ export default function Layout() {
       <footer className="bg-white border-t mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-gray-500">
-            <p>CIS RAM v2.1 Risk Assessment Tool — Based on CIS Controls v8.1</p>
-            <p>Center for Internet Security</p>
+            <p>{settings.footerLeft || 'CIS RAM v2.1 Risk Assessment Tool — Based on CIS Controls v8.1'}</p>
+            <div className="flex items-center gap-4">
+              {settings.contactEmail && (
+                <a
+                  href={`mailto:${settings.contactEmail}`}
+                  className="flex items-center gap-1.5 text-gray-500 hover:text-primary-600 transition-colors"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  {settings.contactEmail}
+                </a>
+              )}
+              {settings.contactUrl && (
+                <a
+                  href={settings.contactUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-gray-500 hover:text-primary-600 transition-colors"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  {settings.contactUrl.replace(/^https?:\/\//, '')}
+                </a>
+              )}
+              <p>{settings.footerRight || 'Center for Internet Security'}</p>
+            </div>
           </div>
         </div>
       </footer>

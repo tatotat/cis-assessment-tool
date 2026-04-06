@@ -12,6 +12,7 @@ export default function Home() {
   const [mode, setMode] = useState('new'); // 'new' | 'resume'
   const [email, setEmail] = useState('');
   const [orgCode, setOrgCode] = useState('');
+  const [guestMode, setGuestMode] = useState(false);
   const [resumeSessionId, setResumeSessionId] = useState('');
   const [formError, setFormError] = useState('');
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
@@ -35,8 +36,12 @@ export default function Home() {
       setFormError('Please enter a valid email address.');
       return;
     }
-    if (!orgCode.trim()) {
-      setFormError('Organization code is required.');
+    const effectiveOrgCode = guestMode ? (settings.guestOrgCode || '').trim() : orgCode.trim();
+    if (!effectiveOrgCode) {
+      setFormError(guestMode
+        ? 'Guest access is not configured. Contact your administrator.'
+        : 'Organization code is required.'
+      );
       return;
     }
     if (mode === 'resume' && !resumeSessionId.trim()) {
@@ -50,7 +55,7 @@ export default function Home() {
 
     const success = await startSession(
       email,
-      orgCode,
+      effectiveOrgCode,
       mode === 'resume',
       mode === 'resume' ? resumeSessionId.trim() : null
     );
@@ -185,18 +190,43 @@ export default function Home() {
                   <Hash className="w-4 h-4 inline mr-1" />
                   Organization Code
                 </label>
-                <input
-                  type="text"
-                  value={orgCode}
-                  onChange={e => setOrgCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. DEMO001"
-                  className="input-field font-mono uppercase"
-                  required
-                  maxLength={20}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Contact your administrator for your organization code.
-                </p>
+                {guestMode ? (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+                    <Shield className="w-4 h-4 text-primary-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700 font-medium">Guest Access</span>
+                    <span className="ml-auto text-xs text-gray-400 font-mono">{settings.guestOrgCode || '—'}</span>
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={orgCode}
+                    onChange={e => setOrgCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. DEMO001"
+                    className="input-field font-mono uppercase"
+                    required={!guestMode}
+                    maxLength={20}
+                  />
+                )}
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-gray-500">
+                    {guestMode
+                      ? 'You are accessing as a guest.'
+                      : 'Contact your administrator for your organization code.'}
+                  </p>
+                  {settings.guestOrgCode && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGuestMode(g => !g);
+                        setFormError('');
+                        clearError();
+                      }}
+                      className="text-xs text-primary-600 hover:text-primary-700 underline underline-offset-2 flex-shrink-0 ml-2"
+                    >
+                      {guestMode ? 'Use org code instead' : 'Continue as Guest'}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Session ID (resume only) */}
