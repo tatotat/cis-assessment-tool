@@ -25,16 +25,16 @@ function ProtectedAdminRoute({ children }) {
   const adminUser = useAssessmentStore(s => s.adminUser);
 
   useEffect(() => {
-    // In demo mode, check our in-memory admin user state
     if (IS_DEMO_MODE) {
-      // If adminUser is already set in store (from demo login), allow through
+      // Demo mode: session is the stored adminUser (set at login, cleared at logout)
       setSession(adminUser ? { user: adminUser } : null);
       return;
     }
 
+    // Supabase mode: get session once on mount, then listen for changes
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setAdminUser(session?.user || null);
+      if (session?.user) setAdminUser(session.user);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -43,7 +43,7 @@ function ProtectedAdminRoute({ children }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [adminUser]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (session === undefined) {
     return (
