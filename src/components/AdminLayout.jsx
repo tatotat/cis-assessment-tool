@@ -103,13 +103,13 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-64 flex-col bg-primary-600 fixed inset-y-0 left-0 z-10">
+      <aside className="hidden sm:flex w-64 flex-col bg-primary-600 fixed inset-y-0 left-0 z-10">
         <SidebarContent />
       </aside>
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-40">
+        <div className="sm:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
           <aside className="absolute left-0 inset-y-0 w-64 flex flex-col bg-primary-600 z-50">
             <button
@@ -124,9 +124,9 @@ export default function AdminLayout() {
       )}
 
       {/* Main content */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 sm:ml-64 flex flex-col min-h-screen">
         {/* Mobile header */}
-        <header className="md:hidden bg-primary-600 text-white px-4 py-3 flex items-center gap-3">
+        <header className="sm:hidden bg-primary-600 text-white px-4 py-3 flex items-center gap-3">
           <button onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
