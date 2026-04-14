@@ -1,0 +1,272 @@
+{
+  "layout": {
+    "steps": {
+      "identify": "Identify",
+      "screening": "Screening",
+      "assessment": "Assessment",
+      "report": "Report"
+    },
+    "newAssessment": "New Assessment",
+    "admin": "Admin",
+    "confirmNewAssessment": "Start a new assessment? Your current session will be lost."
+  },
+  "home": {
+    "subtitle": "Risk Assessment Tool",
+    "description": "Assess your organization's cybersecurity risk posture using the CIS Controls Risk Assessment Method, aligned with CIS Controls v8.1.",
+    "importantNotice": "Important Notice",
+    "tabs": {
+      "new": "New Assessment",
+      "resume": "Continue Assessment"
+    },
+    "emailLabel": "Your Email Address",
+    "emailPlaceholder": "you@organization.com",
+    "orgCodeLabel": "Organization Code",
+    "guestAccessLabel": "Guest Access",
+    "accessingAsGuest": "You are accessing as a guest.",
+    "orgCodeHint": "Contact your administrator for your organization code.",
+    "useOrgCodeLink": "Use org code instead",
+    "continueAsGuestLink": "Continue as Guest",
+    "sessionIdLabel": "Session ID",
+    "sessionIdPlaceholder": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "sessionIdHint": "Your session ID was shown when you started your assessment.",
+    "errors": {
+      "invalidEmail": "Please enter a valid email address.",
+      "guestNotConfigured": "Guest access is not configured. Contact your administrator.",
+      "orgCodeRequired": "Organization code is required.",
+      "sessionRequired": "Session ID is required to resume an assessment.",
+      "disclaimerRequired": "Please accept the disclaimer to continue."
+    },
+    "buttons": {
+      "creating": "Creating Assessment...",
+      "loading": "Loading Session...",
+      "start": "Start New Assessment",
+      "continue": "Continue Assessment"
+    },
+    "features": {
+      "safeguards": { "label": "153 Safeguards", "desc": "CIS Controls v8.1" },
+      "riskLevels": { "label": "3 Risk Levels", "desc": "IG1, IG2, IG3" },
+      "pdfReport": { "label": "PDF Report", "desc": "Exportable results" }
+    },
+    "demoNoteStrong": "Demo:",
+    "demoNoteText": "Use organization code DEMO001 to try the tool. Contact your admin to set up your organization's code."
+  },
+  "screening": {
+    "title": "Implementation Group Screening",
+    "description": "Answer these 5 questions to determine which CIS Controls Implementation Group (IG1, IG2, or IG3) best fits your organization. This determines the scope and scale of your assessment.",
+    "yourName": "Your Name (optional)",
+    "namePlaceholder": "First and last name",
+    "basedOnAnswers": "Based on your answers:",
+    "safeguardsLabel": "Safeguards:",
+    "scoringLabel": "Scoring:",
+    "answeredCount": "{{count}} of 5 answered",
+    "back": "Back",
+    "startingAssessment": "Starting Assessment...",
+    "startAssessment": "Start Assessment",
+    "reviewResult": "Review Result",
+    "questions": {
+      "1": {
+        "question": "What is the size of your organization?",
+        "description": "Count all full-time and part-time employees.",
+        "options": {
+          "1": { "label": "Small", "detail": "Fewer than 50 employees" },
+          "2": { "label": "Medium", "detail": "50 to 999 employees" },
+          "3": { "label": "Large", "detail": "1,000 or more employees" }
+        }
+      },
+      "2": {
+        "question": "What is your IT security staffing level?",
+        "description": "Who manages cybersecurity in your organization?",
+        "options": {
+          "1": { "label": "None / Part-time", "detail": "No dedicated IT security; security handled as-needed" },
+          "2": { "label": "IT with Security Role", "detail": "Some IT staff with security responsibilities" },
+          "3": { "label": "Dedicated Security Team", "detail": "Full-time security professionals or a SOC" }
+        }
+      },
+      "3": {
+        "question": "What type of data does your organization handle?",
+        "description": "Consider the most sensitive data you process or store.",
+        "options": {
+          "1": { "label": "Basic Business Data", "detail": "General business operations, no sensitive PII or regulated data" },
+          "2": { "label": "Sensitive Customer / Financial", "detail": "Customer PII, financial records, healthcare data" },
+          "3": { "label": "Highly Regulated / Classified", "detail": "Government, classified, critical infrastructure data" }
+        }
+      },
+      "4": {
+        "question": "What are your compliance and regulatory requirements?",
+        "description": "Consider all applicable laws, regulations, and contractual requirements.",
+        "options": {
+          "1": { "label": "None / Minimal", "detail": "No significant regulatory obligations" },
+          "2": { "label": "Some Regulations", "detail": "PCI-DSS, HIPAA, GDPR, SOC 2, or similar" },
+          "3": { "label": "Extensive Regulation", "detail": "FISMA, FedRAMP, CMMC, NERC CIP, multiple overlapping regulations" }
+        }
+      },
+      "5": {
+        "question": "How would you describe your technology environment?",
+        "description": "Consider your IT infrastructure complexity.",
+        "options": {
+          "1": { "label": "Basic IT", "detail": "Small office network, cloud services, standard endpoints" },
+          "2": { "label": "Moderate Complexity", "detail": "Multiple sites, mixed cloud/on-prem, custom applications" },
+          "3": { "label": "Complex / Critical", "detail": "Multi-site, OT/ICS, critical infrastructure, advanced services" }
+        }
+      }
+    },
+    "ig": {
+      "1": {
+        "label": "Implementation Group 1",
+        "description": "Designed for small to medium organizations with limited IT and cybersecurity expertise. Focuses on essential cyber hygiene safeguards to protect against the most common attacks.",
+        "scaleInfo": "3-point impact scale, maturity-based expectancy"
+      },
+      "2": {
+        "label": "Implementation Group 2",
+        "description": "For organizations with moderate IT resources. Includes all IG1 safeguards plus additional controls for organizations handling sensitive data or facing elevated risk.",
+        "scaleInfo": "5-point impact scale, direct expectancy scoring"
+      },
+      "3": {
+        "label": "Implementation Group 3",
+        "description": "For large organizations or those operating in highly regulated environments. Includes all 153 safeguards with comprehensive security controls for critical infrastructure.",
+        "scaleInfo": "5-point impact scale, direct expectancy scoring, financial impact"
+      }
+    }
+  },
+  "assessment": {
+    "progressLabel": "Assessment Progress",
+    "controls": "Controls",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "noSafeguards": "No safeguards found for this assessment.",
+    "safeguardsUnit": "safeguards",
+    "session": "Session:",
+    "whatDoesThisMean": "What does this mean?",
+    "maturityQuestion": "How well do we currently have this in place?",
+    "expectancyQuestion": "How likely is it that an incident could happen in this area?",
+    "estimatedLikelihood": "Estimated incident likelihood: {{value}} out of 3",
+    "estimatedLikelihoodNote": "Based on how well this is implemented, we've estimated the likelihood of an incident occurring. This considers real-world cybersecurity incident data.",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "Add notes about this safeguard's current state, planned improvements, or exceptions...",
+    "whyItMatters": "Why it matters:",
+    "buttons": {
+      "previous": "Previous",
+      "save": "Save",
+      "saveAndNext": "Save & Next",
+      "complete": "Complete & View Report",
+      "finalizing": "Finalizing..."
+    },
+    "expectancy": {
+      "1": { "label": "Very Unlikely", "detail": "We have strong protections and no known threats in this area" },
+      "2": { "label": "Possible but Rare", "detail": "Could happen, but maybe only once every few years" },
+      "3": { "label": "Occasional", "detail": "Happens sometimes — roughly once a year is realistic" },
+      "4": { "label": "Common", "detail": "Happens regularly in our sector, could happen to us soon" },
+      "5": { "label": "Frequent or Active", "detail": "Could be happening right now or happened recently" }
+    },
+    "riskScore": {
+      "whatItMeans": "What this score means",
+      "requiredAction": "Required action",
+      "effectOnOrg": "Effect on your organization",
+      "formula": "Risk Score = Likelihood of incident × Severity of impact. Scale: 1–{{max}}. Higher = greater organizational risk.",
+      "acceptable": {
+        "headline": "This area is within acceptable risk",
+        "what": "The combination of how likely an incident is and how much damage it could cause is currently at a manageable level for your organization.",
+        "impact": "No immediate action is required. Continue maintaining the current practices and review periodically.",
+        "orgEffect": "Your organization can absorb this level of risk without significant disruption."
+      },
+      "unacceptable": {
+        "headline": "This area carries unacceptable risk",
+        "what": "The likelihood of an incident combined with the potential damage is higher than your organization should tolerate. This weakness could be exploited.",
+        "impact": "Action is needed within the next 90 days. Without improvement, this gap could lead to data breaches, operational disruptions, or compliance violations.",
+        "orgEffect": "If exploited, your organization would likely face significant recovery costs, reputational damage, or service interruptions."
+      },
+      "high": {
+        "headline": "This area is at HIGH RISK — immediate action required",
+        "what": "This is the worst-case combination: incidents in this area are likely AND the damage could be severe or catastrophic. This is a critical vulnerability.",
+        "impact": "This must be addressed within 30 days. Leaving this unresolved significantly increases the chance of a serious cybersecurity incident.",
+        "orgEffect": "A successful attack exploiting this weakness could have severe consequences — including financial loss, regulatory penalties, data theft, or inability to operate."
+      }
+    }
+  },
+  "report": {
+    "title": "Risk Assessment Report",
+    "exportPDF": "Export PDF",
+    "newAssessment": "New Assessment",
+    "tabs": {
+      "executive": "Executive Summary",
+      "safeguards": "Safeguard Status",
+      "recommendations": "Recommendations"
+    },
+    "status": {
+      "compliant": "Compliant",
+      "needsImprovement": "Needs Improvement",
+      "nonCompliant": "Non-Compliant",
+      "critical": "Critical",
+      "notAssessed": "Not Assessed"
+    },
+    "ori": {
+      "low": "Low",
+      "guarded": "Guarded",
+      "elevated": "Elevated",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "immediateActions": "Immediate Actions Required",
+    "controlScores": "Control Scores",
+    "riskByControl": "Risk by Control Area",
+    "searchSafeguards": "Search safeguards...",
+    "filterAll": "All",
+    "noResults": "No safeguards match your search.",
+    "printReport": "Print / Save PDF"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "organizations": "Organizations",
+    "assessments": "Assessments",
+    "users": "Users",
+    "settings": "Settings",
+    "languages": "Languages",
+    "signOut": "Sign Out",
+    "assessmentTool": "Assessment Tool",
+    "console": "Admin Console"
+  },
+  "languages": {
+    "title": "Language Management",
+    "description": "Add or update languages without rebuilding the platform. Upload a JSON language pack to make it instantly available to all users.",
+    "currentLanguages": "Available Languages",
+    "uploadSection": "Upload Language Pack",
+    "uploadInstructions": "Translate the English template and upload the JSON file. Name it with the ISO 639-1 language code (e.g. es.json, fr.json, pt.json).",
+    "downloadTemplate": "Download English Template (en.json)",
+    "selectFile": "Select translated JSON file...",
+    "uploadButton": "Upload Pack",
+    "uploading": "Uploading...",
+    "uploadSuccess": "Language pack uploaded successfully.",
+    "uploadError": "Upload failed. Make sure the 'locales' bucket exists and is public in Supabase Storage.",
+    "manifestSection": "Language List",
+    "manifestInstructions": "After uploading a language pack, add the language here so it appears in the switcher.",
+    "addLanguageTitle": "Add Language",
+    "codeLabel": "ISO Code",
+    "codePlaceholder": "es",
+    "nameLabel": "English Name",
+    "namePlaceholder": "Spanish",
+    "nativeLabel": "Native Name",
+    "nativePlaceholder": "Español",
+    "addButton": "Add",
+    "saveManifest": "Save Language List",
+    "savingManifest": "Saving...",
+    "manifestSaved": "Language list saved.",
+    "removeLanguage": "Remove",
+    "howItWorksTitle": "How it works",
+    "howItWorksSteps": [
+      "Download the English template (en.json) below.",
+      "Translate all values — keep the JSON keys unchanged.",
+      "Upload your file named with the language code (e.g. es.json).",
+      "Add the language to the list and save.",
+      "Users immediately see the new option in the language switcher — no rebuild needed."
+    ],
+    "storageNote": "Files are stored in Supabase Storage (bucket: locales, public). In demo mode uploads are simulated locally and won't persist across sessions.",
+    "demoWarning": "Demo / Offline mode — uploads are simulated and won't persist. Connect Supabase to enable real language pack storage.",
+    "noLanguages": "No languages configured yet.",
+    "builtInLabel": "Built-in",
+    "serverLabel": "Server"
+  },
+  "languageSwitcher": {
+    "tooltip": "Change language",
+    "loading": "Loading..."
+  }
+}

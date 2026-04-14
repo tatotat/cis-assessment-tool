@@ -12,6 +12,7 @@ import AssessmentsList from './pages/admin/AssessmentsList';
 import AdminLogin from './pages/admin/Login';
 import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
+import AdminLanguages from './pages/admin/Languages';
 import { supabase, IS_DEMO_MODE } from './lib/supabase';
 import useAssessmentStore from './stores/assessmentStore';
 import { applyStoredBranding } from './lib/settings';
@@ -89,6 +90,7 @@ export default function App() {
           <Route path="assessments" element={<AssessmentsList />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="languages" element={<AdminLanguages />} />
         </Route>
 
         {/* Catch all */}

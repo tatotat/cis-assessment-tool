@@ -4,6 +4,7 @@ import {
   ChevronLeft, ChevronRight, CheckCircle, AlertTriangle,
   Save, BarChart2, List, Info, Flag, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
 import {
   calculateRiskScore, getRiskLevel, getRiskBgClass,
@@ -24,37 +25,7 @@ const NIST_COLORS = {
   Govern: 'nist-govern',
 };
 
-const EXPECTANCY_OPTIONS = [
-  { score: 1, label: 'Very Unlikely', detail: 'We have strong protections and no known threats in this area' },
-  { score: 2, label: 'Possible but Rare', detail: 'Could happen, but maybe only once every few years' },
-  { score: 3, label: 'Occasional', detail: 'Happens sometimes — roughly once a year is realistic' },
-  { score: 4, label: 'Common', detail: 'Happens regularly in our sector, could happen to us soon' },
-  { score: 5, label: 'Frequent or Active', detail: 'Could be happening right now or happened recently' },
-];
-
-const RISK_MEANING = {
-  acceptable: {
-    headline: 'This area is within acceptable risk',
-    icon: CheckCircle,
-    what: 'The combination of how likely an incident is and how much damage it could cause is currently at a manageable level for your organization.',
-    impact: 'No immediate action is required. Continue maintaining the current practices and review periodically.',
-    orgEffect: 'Your organization can absorb this level of risk without significant disruption.',
-  },
-  unacceptable: {
-    headline: 'This area carries unacceptable risk',
-    icon: AlertTriangle,
-    what: 'The likelihood of an incident combined with the potential damage is higher than your organization should tolerate. This weakness could be exploited.',
-    impact: 'Action is needed within the next 90 days. Without improvement, this gap could lead to data breaches, operational disruptions, or compliance violations.',
-    orgEffect: 'If exploited, your organization would likely face significant recovery costs, reputational damage, or service interruptions.',
-  },
-  high: {
-    headline: 'This area is at HIGH RISK — immediate action required',
-    icon: AlertTriangle,
-    what: 'This is the worst-case combination: incidents in this area are likely AND the damage could be severe or catastrophic. This is a critical vulnerability.',
-    impact: 'This must be addressed within 30 days. Leaving this unresolved significantly increases the chance of a serious cybersecurity incident.',
-    orgEffect: 'A successful attack exploiting this weakness could have severe consequences — including financial loss, regulatory penalties, data theft, or inability to operate.',
-  },
-};
+// These are now generated inside the component using t() — see getExpectancyOptions() / getRiskMeaning()
 
 function getRiskScoreContext(score, igLevel) {
   const max = igLevel === 1 ? 9 : 25;
@@ -73,10 +44,15 @@ function getRiskScoreContext(score, igLevel) {
 }
 
 function RiskScoreDisplay({ score, igLevel }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   if (score === null || score === undefined) return null;
   const level = getRiskLevel(score, igLevel);
-  const meaning = RISK_MEANING[level];
+  const meaning = {
+    acceptable: { headline: t('assessment.riskScore.acceptable.headline'), icon: CheckCircle, what: t('assessment.riskScore.acceptable.what'), impact: t('assessment.riskScore.acceptable.impact'), orgEffect: t('assessment.riskScore.acceptable.orgEffect') },
+    unacceptable: { headline: t('assessment.riskScore.unacceptable.headline'), icon: AlertTriangle, what: t('assessment.riskScore.unacceptable.what'), impact: t('assessment.riskScore.unacceptable.impact'), orgEffect: t('assessment.riskScore.unacceptable.orgEffect') },
+    high: { headline: t('assessment.riskScore.high.headline'), icon: AlertTriangle, what: t('assessment.riskScore.high.what'), impact: t('assessment.riskScore.high.impact'), orgEffect: t('assessment.riskScore.high.orgEffect') },
+  }[level];
   const Icon = meaning.icon;
   const context = getRiskScoreContext(score, igLevel);
 
@@ -140,20 +116,20 @@ function RiskScoreDisplay({ score, igLevel }) {
         )}>
           <div className="grid sm:grid-cols-3 gap-3">
             <div>
-              <div className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">What this score means</div>
+              <div className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">{t('assessment.riskScore.whatItMeans')}</div>
               <p className="text-gray-600 text-xs leading-relaxed">{meaning.what}</p>
             </div>
             <div>
-              <div className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">Required action</div>
+              <div className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">{t('assessment.riskScore.requiredAction')}</div>
               <p className="text-gray-600 text-xs leading-relaxed">{meaning.impact}</p>
             </div>
             <div>
-              <div className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">Effect on your organization</div>
+              <div className="font-semibold text-gray-700 text-xs uppercase tracking-wide mb-1">{t('assessment.riskScore.effectOnOrg')}</div>
               <p className="text-gray-600 text-xs leading-relaxed">{meaning.orgEffect}</p>
             </div>
           </div>
           <div className="text-xs text-gray-400 pt-1 border-t border-gray-200">
-            Risk Score = Likelihood of incident × Severity of impact. Scale: 1–{igLevel === 1 ? 9 : 25}. Higher = greater organizational risk.
+            {t('assessment.riskScore.formula', { max: igLevel === 1 ? 9 : 25 })}
           </div>
         </div>
       )}
@@ -162,6 +138,7 @@ function RiskScoreDisplay({ score, igLevel }) {
 }
 
 function SafeguardInfoBox({ safeguard }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   if (!safeguard?.description) return null;
   return (
@@ -173,7 +150,7 @@ function SafeguardInfoBox({ safeguard }) {
       >
         <span className="flex items-center gap-2">
           <Info className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          What does this mean?
+          {t('assessment.whatDoesThisMean')}
         </span>
         {open ? <ChevronUp className="w-4 h-4 text-blue-500" /> : <ChevronDown className="w-4 h-4 text-blue-500" />}
       </button>
@@ -182,7 +159,7 @@ function SafeguardInfoBox({ safeguard }) {
           <p>{safeguard.description}</p>
           {safeguard.whyItMatters && (
             <p className="text-blue-700 italic">
-              <strong>Why it matters: </strong>{safeguard.whyItMatters}
+              <strong>{t('assessment.whyItMatters')} </strong>{safeguard.whyItMatters}
             </p>
           )}
         </div>
@@ -192,12 +169,20 @@ function SafeguardInfoBox({ safeguard }) {
 }
 
 export default function Assessment() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     sessionId, safeguards, currentIndex, responses, implementationGroup,
     saveResponse, setCurrentIndex, completeAssessment, saveStatus,
     organization, assessorName, status
   } = useAssessmentStore();
+
+  // Build expectancy options from translations
+  const EXPECTANCY_OPTIONS = [1, 2, 3, 4, 5].map(score => ({
+    score,
+    label: t(`assessment.expectancy.${score}.label`),
+    detail: t(`assessment.expectancy.${score}.detail`),
+  }));
 
   const [localResponse, setLocalResponse] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -294,7 +279,7 @@ export default function Assessment() {
   if (!currentSafeguard) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
-        <p className="text-gray-500">No safeguards found for this assessment.</p>
+        <p className="text-gray-500">{t('assessment.noSafeguards')}</p>
       </div>
     );
   }
@@ -320,11 +305,11 @@ export default function Assessment() {
 
         <div className="flex items-center gap-2">
           {saveStatus === 'saving' && (
-            <span className="text-xs text-gray-500 animate-pulse">Saving...</span>
+            <span className="text-xs text-gray-500 animate-pulse">{t('assessment.saving')}</span>
           )}
           {saveStatus === 'saved' && (
             <span className="text-xs text-green-600 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" /> Saved
+              <CheckCircle className="w-3 h-3" /> {t('assessment.saved')}
             </span>
           )}
           <button
@@ -332,7 +317,7 @@ export default function Assessment() {
             className="btn-secondary text-sm py-2 px-3"
           >
             <List className="w-4 h-4" />
-            <span className="hidden sm:inline">Controls</span>
+            <span className="hidden sm:inline">{t('assessment.controls')}</span>
           </button>
         </div>
       </div>
@@ -341,7 +326,7 @@ export default function Assessment() {
       <ProgressBar
         current={completedCount}
         total={totalSafeguards}
-        label="Assessment Progress"
+        label={t('assessment.progressLabel')}
         className="mb-6"
       />
 
@@ -390,7 +375,7 @@ export default function Assessment() {
                 <MaturitySelector
                   value={localResponse.maturity_score || null}
                   onChange={(v) => setLocalResponse(prev => ({ ...prev, maturity_score: v }))}
-                  label="How well do we currently have this in place?"
+                  label={t('assessment.maturityQuestion')}
                 />
               )}
 
@@ -400,8 +385,8 @@ export default function Assessment() {
                   <div className="flex items-center gap-2">
                     <Info className="w-4 h-4 text-blue-500" />
                     <span className="text-blue-800">
-                      <strong>Estimated incident likelihood: {liveExpectancy} out of 3</strong>
-                      {' '}— Based on how well this is implemented, we've estimated the likelihood of an incident occurring. This considers real-world cybersecurity incident data.
+                      <strong>{t('assessment.estimatedLikelihood', { value: liveExpectancy })}</strong>
+                      {' '}— {t('assessment.estimatedLikelihoodNote')}
                     </span>
                   </div>
                 </div>
@@ -411,7 +396,7 @@ export default function Assessment() {
               {ig >= 2 && (
                 <div>
                   <div className="text-sm font-semibold text-gray-700 mb-3">
-                    How likely is it that an incident could happen in this area?
+                    {t('assessment.expectancyQuestion')}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                     {EXPECTANCY_OPTIONS.map(opt => (
@@ -451,12 +436,12 @@ export default function Assessment() {
               <div>
                 <label className="label flex items-center gap-1">
                   <Flag className="w-3.5 h-3.5" />
-                  Notes (optional)
+                  {t('assessment.notesLabel')}
                 </label>
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="Add notes about this safeguard's current state, planned improvements, or exceptions..."
+                  placeholder={t('assessment.notesPlaceholder')}
                   rows={3}
                   className="input-field resize-none text-sm"
                 />
@@ -473,7 +458,7 @@ export default function Assessment() {
                 className="btn-secondary"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                {t('assessment.buttons.previous')}
               </button>
 
               <div className="flex items-center gap-2">
@@ -482,7 +467,7 @@ export default function Assessment() {
                   className="btn-secondary text-sm py-2"
                 >
                   <Save className="w-4 h-4" />
-                  Save
+                  {t('assessment.buttons.save')}
                 </button>
 
                 {currentIndex < totalSafeguards - 1 ? (
@@ -490,7 +475,7 @@ export default function Assessment() {
                     onClick={() => handleSave(true)}
                     className="btn-primary"
                   >
-                    Save & Next
+                    {t('assessment.buttons.saveAndNext')}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (
@@ -502,12 +487,12 @@ export default function Assessment() {
                     {completing ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                        Finalizing...
+                        {t('assessment.buttons.finalizing')}
                       </>
                     ) : (
                       <>
                         <BarChart2 className="w-4 h-4" />
-                        Complete & View Report
+                        {t('assessment.buttons.complete')}
                       </>
                     )}
                   </button>
@@ -524,7 +509,7 @@ export default function Assessment() {
               <div className="card-header">
                 <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
                   <List className="w-4 h-4" />
-                  Controls ({completedCount}/{totalSafeguards} done)
+                  {t('assessment.controls')} ({completedCount}/{totalSafeguards})
                 </h3>
               </div>
               <div className="overflow-y-auto flex-1 scrollbar-thin">

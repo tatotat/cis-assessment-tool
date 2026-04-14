@@ -1,87 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Info, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
 import clsx from 'clsx';
 
-const SCREENING_QUESTIONS = [
-  {
-    id: 1,
-    question: 'What is the size of your organization?',
-    description: 'Count all full-time and part-time employees.',
-    options: [
-      { value: 1, label: 'Small', detail: 'Fewer than 50 employees', ig: 'IG1' },
-      { value: 2, label: 'Medium', detail: '50 to 999 employees', ig: 'IG2' },
-      { value: 3, label: 'Large', detail: '1,000 or more employees', ig: 'IG3' },
-    ],
-  },
-  {
-    id: 2,
-    question: 'What is your IT security staffing level?',
-    description: 'Who manages cybersecurity in your organization?',
-    options: [
-      { value: 1, label: 'None / Part-time', detail: 'No dedicated IT security; security handled as-needed', ig: 'IG1' },
-      { value: 2, label: 'IT with Security Role', detail: 'Some IT staff with security responsibilities', ig: 'IG2' },
-      { value: 3, label: 'Dedicated Security Team', detail: 'Full-time security professionals or a SOC', ig: 'IG3' },
-    ],
-  },
-  {
-    id: 3,
-    question: 'What type of data does your organization handle?',
-    description: 'Consider the most sensitive data you process or store.',
-    options: [
-      { value: 1, label: 'Basic Business Data', detail: 'General business operations, no sensitive PII or regulated data', ig: 'IG1' },
-      { value: 2, label: 'Sensitive Customer / Financial', detail: 'Customer PII, financial records, healthcare data', ig: 'IG2' },
-      { value: 3, label: 'Highly Regulated / Classified', detail: 'Government, classified, critical infrastructure data', ig: 'IG3' },
-    ],
-  },
-  {
-    id: 4,
-    question: 'What are your compliance and regulatory requirements?',
-    description: 'Consider all applicable laws, regulations, and contractual requirements.',
-    options: [
-      { value: 1, label: 'None / Minimal', detail: 'No significant regulatory obligations', ig: 'IG1' },
-      { value: 2, label: 'Some Regulations', detail: 'PCI-DSS, HIPAA, GDPR, SOC 2, or similar', ig: 'IG2' },
-      { value: 3, label: 'Extensive Regulation', detail: 'FISMA, FedRAMP, CMMC, NERC CIP, multiple overlapping regulations', ig: 'IG3' },
-    ],
-  },
-  {
-    id: 5,
-    question: 'How would you describe your technology environment?',
-    description: 'Consider your IT infrastructure complexity.',
-    options: [
-      { value: 1, label: 'Basic IT', detail: 'Small office network, cloud services, standard endpoints', ig: 'IG1' },
-      { value: 2, label: 'Moderate Complexity', detail: 'Multiple sites, mixed cloud/on-prem, custom applications', ig: 'IG2' },
-      { value: 3, label: 'Complex / Critical', detail: 'Multi-site, OT/ICS, critical infrastructure, advanced services', ig: 'IG3' },
-    ],
-  },
-];
-
-const IG_INFO = {
-  1: {
-    label: 'Implementation Group 1',
-    color: 'bg-green-50 border-green-200 text-green-800',
-    badgeColor: 'bg-green-100 text-green-800',
-    description: 'Designed for small to medium organizations with limited IT and cybersecurity expertise. Focuses on essential cyber hygiene safeguards to protect against the most common attacks.',
-    safeguardCount: 56,
-    scaleInfo: '3-point impact scale, maturity-based expectancy',
-  },
-  2: {
-    label: 'Implementation Group 2',
-    color: 'bg-blue-50 border-blue-200 text-blue-800',
-    badgeColor: 'bg-blue-100 text-blue-800',
-    description: 'For organizations with moderate IT resources. Includes all IG1 safeguards plus additional controls for organizations handling sensitive data or facing elevated risk.',
-    safeguardCount: 130,
-    scaleInfo: '5-point impact scale, direct expectancy scoring',
-  },
-  3: {
-    label: 'Implementation Group 3',
-    color: 'bg-purple-50 border-purple-200 text-purple-800',
-    badgeColor: 'bg-purple-100 text-purple-800',
-    description: 'For large organizations or those operating in highly regulated environments. Includes all 153 safeguards with comprehensive security controls for critical infrastructure.',
-    safeguardCount: 153,
-    scaleInfo: '5-point impact scale, direct expectancy scoring, financial impact',
-  },
+// IG display config (colors only — labels/descriptions come from translations)
+const IG_COLORS = {
+  1: { color: 'bg-green-50 border-green-200 text-green-800', badgeColor: 'bg-green-100 text-green-800', safeguardCount: 56 },
+  2: { color: 'bg-blue-50 border-blue-200 text-blue-800', badgeColor: 'bg-blue-100 text-blue-800', safeguardCount: 130 },
+  3: { color: 'bg-purple-50 border-purple-200 text-purple-800', badgeColor: 'bg-purple-100 text-purple-800', safeguardCount: 153 },
 };
 
 function calculateIG(answers) {
@@ -93,8 +21,22 @@ function calculateIG(answers) {
 }
 
 export default function Screening() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { completeScreening, status, sessionId, organization } = useAssessmentStore();
+
+  // Build question list from translations
+  const SCREENING_QUESTIONS = [1, 2, 3, 4, 5].map(id => ({
+    id,
+    question: t(`screening.questions.${id}.question`),
+    description: t(`screening.questions.${id}.description`),
+    options: [1, 2, 3].map(v => ({
+      value: v,
+      label: t(`screening.questions.${id}.options.${v}.label`),
+      detail: t(`screening.questions.${id}.options.${v}.detail`),
+      ig: `IG${v}`,
+    })),
+  }));
 
   const [answers, setAnswers] = useState(Array(5).fill(null));
   const [name, setName] = useState('');
@@ -128,15 +70,15 @@ export default function Screening() {
     if (showResult) setShowResult(false);
   }
 
-  const igInfo = projectedIG ? IG_INFO[projectedIG] : null;
+  const igColors = projectedIG ? IG_COLORS[projectedIG] : null;
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Implementation Group Screening</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('screening.title')}</h1>
         <p className="text-gray-600">
-          Answer these 5 questions to determine which CIS Controls Implementation Group (IG1, IG2, or IG3) best fits your organization. This determines the scope and scale of your assessment.
+          {t('screening.description')}
         </p>
         {organization && (
           <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700">
@@ -152,13 +94,13 @@ export default function Screening() {
         <div className="card-body">
           <label className="label">
             <User className="w-4 h-4 inline mr-1" />
-            Your Name (optional)
+            {t('screening.yourName')}
           </label>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="First and last name"
+            placeholder={t('screening.namePlaceholder')}
             className="input-field max-w-sm"
           />
         </div>
@@ -221,36 +163,36 @@ export default function Screening() {
 
       {/* Live IG Preview */}
       {projectedIG && !showResult && (
-        <div className={clsx('mt-6 p-4 rounded-xl border-2 transition-all', igInfo?.color)}>
+        <div className={clsx('mt-6 p-4 rounded-xl border-2 transition-all', igColors?.color)}>
           <div className="flex items-center gap-2">
             <Info className="w-5 h-5 flex-shrink-0" />
             <div>
-              <span className="font-semibold">Based on your answers: </span>
-              <span className="font-bold">{igInfo.label}</span>
-              <span className="text-sm ml-2">({igInfo.safeguardCount} safeguards)</span>
+              <span className="font-semibold">{t('screening.basedOnAnswers')} </span>
+              <span className="font-bold">{t(`screening.ig.${projectedIG}.label`)}</span>
+              <span className="text-sm ml-2">({igColors.safeguardCount} {t('assessment.safeguardsUnit')})</span>
             </div>
           </div>
         </div>
       )}
 
       {/* IG Result */}
-      {showResult && projectedIG && igInfo && (
-        <div className={clsx('mt-6 p-6 rounded-xl border-2', igInfo.color)}>
+      {showResult && projectedIG && igColors && (
+        <div className={clsx('mt-6 p-6 rounded-xl border-2', igColors.color)}>
           <div className="flex items-start gap-4">
-            <div className={clsx('px-3 py-2 rounded-lg text-lg font-black', igInfo.badgeColor)}>
+            <div className={clsx('px-3 py-2 rounded-lg text-lg font-black', igColors.badgeColor)}>
               {`IG${projectedIG}`}
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-lg">{igInfo.label}</h3>
-              <p className="text-sm mt-1 opacity-90">{igInfo.description}</p>
+              <h3 className="font-bold text-lg">{t(`screening.ig.${projectedIG}.label`)}</h3>
+              <p className="text-sm mt-1 opacity-90">{t(`screening.ig.${projectedIG}.description`)}</p>
               <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <span className="font-medium">Safeguards: </span>
-                  <span className="font-bold">{igInfo.safeguardCount}</span>
+                  <span className="font-medium">{t('screening.safeguardsLabel')} </span>
+                  <span className="font-bold">{igColors.safeguardCount}</span>
                 </div>
                 <div>
-                  <span className="font-medium">Scoring: </span>
-                  <span>{igInfo.scaleInfo}</span>
+                  <span className="font-medium">{t('screening.scoringLabel')} </span>
+                  <span>{t(`screening.ig.${projectedIG}.scaleInfo`)}</span>
                 </div>
               </div>
             </div>
@@ -266,7 +208,7 @@ export default function Screening() {
             a !== null ? 'bg-primary-500' : 'bg-gray-300'
           )} />
         ))}
-        <span className="ml-1">{answers.filter(a => a !== null).length} of 5 answered</span>
+        <span className="ml-1">{t('screening.answeredCount', { count: answers.filter(a => a !== null).length })}</span>
       </div>
 
       {/* Actions */}
@@ -276,7 +218,7 @@ export default function Screening() {
           onClick={() => navigate('/')}
           className="btn-secondary"
         >
-          Back
+          {t('screening.back')}
         </button>
 
         <button
@@ -288,16 +230,16 @@ export default function Screening() {
           {submitting ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-              Starting Assessment...
+              {t('screening.startingAssessment')}
             </>
           ) : showResult ? (
             <>
-              Start Assessment
+              {t('screening.startAssessment')}
               <ArrowRight className="w-5 h-5" />
             </>
           ) : (
             <>
-              Review Result
+              {t('screening.reviewResult')}
               <ArrowRight className="w-5 h-5" />
             </>
           )}

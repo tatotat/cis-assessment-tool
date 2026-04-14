@@ -1,26 +1,29 @@
 import React, { useMemo } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, ChevronRight, LayoutDashboard, Mail, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
 import { getSettings } from '../lib/settings';
-
-const steps = [
-  { path: '/', label: 'Identify', step: 1 },
-  { path: '/screening', label: 'Screening', step: 2 },
-  { path: '/assessment', label: 'Assessment', step: 3 },
-  { path: '/report', label: 'Report', step: 4 },
-];
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Layout() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { status, sessionId, reset } = useAssessmentStore();
   const settings = useMemo(() => getSettings(), []);
 
+  const steps = [
+    { path: '/', label: t('layout.steps.identify'), step: 1 },
+    { path: '/screening', label: t('layout.steps.screening'), step: 2 },
+    { path: '/assessment', label: t('layout.steps.assessment'), step: 3 },
+    { path: '/report', label: t('layout.steps.report'), step: 4 },
+  ];
+
   const currentStep = steps.findIndex(s => s.path === location.pathname) + 1 || 1;
 
   function handleNewAssessment() {
-    if (window.confirm('Start a new assessment? Your current session will be lost.')) {
+    if (window.confirm(t('layout.confirmNewAssessment'))) {
       reset();
       navigate('/');
     }
@@ -59,17 +62,18 @@ export default function Layout() {
               {sessionId && status !== 'idle' && (
                 <button
                   onClick={handleNewAssessment}
-                  className="text-sm text-primary-200 hover:text-white transition-colors"
+                  className="text-sm text-primary-200 hover:text-white transition-colors hidden sm:block"
                 >
-                  New Assessment
+                  {t('layout.newAssessment')}
                 </button>
               )}
+              <LanguageSwitcher />
               <Link
                 to="/admin"
                 className="flex items-center gap-1.5 text-sm text-primary-200 hover:text-white transition-colors"
               >
                 <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">Admin</span>
+                <span className="hidden sm:inline">{t('layout.admin')}</span>
               </Link>
             </div>
           </div>

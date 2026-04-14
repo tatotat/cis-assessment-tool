@@ -2,20 +2,23 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Shield, LayoutDashboard, Building2, ClipboardList,
-  LogOut, Menu, X, ChevronRight, Users, Settings
+  LogOut, Menu, X, ChevronRight, Users, Settings, Languages
 } from 'lucide-react';
 import { supabase, IS_DEMO_MODE } from '../lib/supabase';
 import useAssessmentStore from '../stores/assessmentStore';
+import { useTranslation } from 'react-i18next';
 
 const navItems = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/admin/organizations', label: 'Organizations', icon: Building2 },
-  { path: '/admin/assessments', label: 'Assessments', icon: ClipboardList },
-  { path: '/admin/users', label: 'Users', icon: Users },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+  { path: '/admin', labelKey: 'admin.dashboard', icon: LayoutDashboard, exact: true },
+  { path: '/admin/organizations', labelKey: 'admin.organizations', icon: Building2 },
+  { path: '/admin/assessments', labelKey: 'admin.assessments', icon: ClipboardList },
+  { path: '/admin/users', labelKey: 'admin.users', icon: Users },
+  { path: '/admin/settings', labelKey: 'admin.settings', icon: Settings },
+  { path: '/admin/languages', labelKey: 'admin.languages', icon: Languages },
 ];
 
 export default function AdminLayout() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const setAdminUser = useAssessmentStore(s => s.setAdminUser);
@@ -43,7 +46,7 @@ export default function AdminLayout() {
           </div>
           <div>
             <div className="font-bold text-white text-sm">CIS RAM v2.1</div>
-            <div className="text-xs text-primary-300">Admin Console</div>
+            <div className="text-xs text-primary-300">{t('admin.console')}</div>
           </div>
         </Link>
       </div>
@@ -65,7 +68,7 @@ export default function AdminLayout() {
               }`}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
-              {item.label}
+              {t(item.labelKey)}
               {active && <ChevronRight className="w-4 h-4 ml-auto" />}
             </Link>
           );
@@ -87,14 +90,14 @@ export default function AdminLayout() {
           className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-primary-200 hover:bg-primary-700/50 hover:text-white transition-colors"
         >
           <LogOut className="w-4 h-4" />
-          Sign Out
+          {t('admin.signOut')}
         </button>
         <Link
           to="/"
           className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-primary-200 hover:bg-primary-700/50 hover:text-white transition-colors mt-1"
         >
           <Shield className="w-4 h-4" />
-          Assessment Tool
+          {t('admin.assessmentTool')}
         </Link>
       </div>
     </div>
@@ -132,7 +135,7 @@ export default function AdminLayout() {
           </button>
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            <span className="font-semibold">Admin Console</span>
+            <span className="font-semibold">{t('admin.console')}</span>
           </div>
         </header>
 

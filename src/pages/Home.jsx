@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Mail, Hash, ArrowRight, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
 import { getSettings } from '../lib/settings';
 import clsx from 'clsx';
 
 export default function Home() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { startSession, loading, error, clearError, status, sessionId } = useAssessmentStore();
 
@@ -33,23 +35,23 @@ export default function Home() {
     clearError();
 
     if (!validateEmail(email)) {
-      setFormError('Please enter a valid email address.');
+      setFormError(t('home.errors.invalidEmail'));
       return;
     }
     const effectiveOrgCode = guestMode ? (settings.guestOrgCode || '').trim() : orgCode.trim();
     if (!effectiveOrgCode) {
       setFormError(guestMode
-        ? 'Guest access is not configured. Contact your administrator.'
-        : 'Organization code is required.'
+        ? t('home.errors.guestNotConfigured')
+        : t('home.errors.orgCodeRequired')
       );
       return;
     }
     if (mode === 'resume' && !resumeSessionId.trim()) {
-      setFormError('Session ID is required to resume an assessment.');
+      setFormError(t('home.errors.sessionRequired'));
       return;
     }
     if (settings.disclaimer && settings.requireDisclaimerAccept && !disclaimerAccepted) {
-      setFormError('Please accept the disclaimer to continue.');
+      setFormError(t('home.errors.disclaimerRequired'));
       return;
     }
 
@@ -101,9 +103,9 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
             {toolName}
           </h1>
-          <p className="text-lg text-gray-600 mb-2">Risk Assessment Tool</p>
+          <p className="text-lg text-gray-600 mb-2">{t('home.subtitle')}</p>
           <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            Assess your organization's cybersecurity risk posture using the CIS Controls Risk Assessment Method, aligned with CIS Controls v8.1.
+            {t('home.description')}
           </p>
         </div>
 
@@ -112,7 +114,7 @@ export default function Home() {
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-900">
             <div className="font-semibold mb-1 flex items-center gap-2">
               <Shield className="w-4 h-4" />
-              Important Notice
+              {t('home.importantNotice')}
             </div>
             <p className="whitespace-pre-wrap">{settings.disclaimer}</p>
             {settings.requireDisclaimerAccept && (
@@ -147,7 +149,7 @@ export default function Home() {
                     : 'text-gray-600 hover:text-gray-800'
                 )}
               >
-                New Assessment
+                {t('home.tabs.new')}
               </button>
               <button
                 type="button"
@@ -160,7 +162,7 @@ export default function Home() {
                 )}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                Continue Assessment
+                {t('home.tabs.resume')}
               </button>
             </div>
           </div>
@@ -171,13 +173,13 @@ export default function Home() {
               <div>
                 <label className="label">
                   <Mail className="w-4 h-4 inline mr-1" />
-                  Your Email Address
+                  {t('home.emailLabel')}
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="you@organization.com"
+                  placeholder={t('home.emailPlaceholder')}
                   className="input-field"
                   required
                   autoComplete="email"
@@ -188,12 +190,12 @@ export default function Home() {
               <div>
                 <label className="label">
                   <Hash className="w-4 h-4 inline mr-1" />
-                  Organization Code
+                  {t('home.orgCodeLabel')}
                 </label>
                 {guestMode ? (
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                     <Shield className="w-4 h-4 text-primary-600 flex-shrink-0" />
-                    <span className="text-sm text-gray-700 font-medium">Guest Access</span>
+                    <span className="text-sm text-gray-700 font-medium">{t('home.guestAccessLabel')}</span>
                     <span className="ml-auto text-xs text-gray-400 font-mono">{settings.guestOrgCode || '—'}</span>
                   </div>
                 ) : (
@@ -210,8 +212,8 @@ export default function Home() {
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-xs text-gray-500">
                     {guestMode
-                      ? 'You are accessing as a guest.'
-                      : 'Contact your administrator for your organization code.'}
+                      ? t('home.accessingAsGuest')
+                      : t('home.orgCodeHint')}
                   </p>
                   {settings.guestOrgCode && (
                     <button
@@ -223,7 +225,7 @@ export default function Home() {
                       }}
                       className="text-xs text-primary-600 hover:text-primary-700 underline underline-offset-2 flex-shrink-0 ml-2"
                     >
-                      {guestMode ? 'Use org code instead' : 'Continue as Guest'}
+                      {guestMode ? t('home.useOrgCodeLink') : t('home.continueAsGuestLink')}
                     </button>
                   )}
                 </div>
@@ -232,17 +234,17 @@ export default function Home() {
               {/* Session ID (resume only) */}
               {mode === 'resume' && (
                 <div>
-                  <label className="label">Session ID</label>
+                  <label className="label">{t('home.sessionIdLabel')}</label>
                   <input
                     type="text"
                     value={resumeSessionId}
                     onChange={e => setResumeSessionId(e.target.value.trim())}
-                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                    placeholder={t('home.sessionIdPlaceholder')}
                     className="input-field font-mono text-sm"
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Your session ID was shown when you started your assessment.
+                    {t('home.sessionIdHint')}
                   </p>
                 </div>
               )}
@@ -264,11 +266,11 @@ export default function Home() {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                    {mode === 'new' ? 'Creating Assessment...' : 'Loading Session...'}
+                    {mode === 'new' ? t('home.buttons.creating') : t('home.buttons.loading')}
                   </>
                 ) : (
                   <>
-                    {mode === 'new' ? 'Start New Assessment' : 'Continue Assessment'}
+                    {mode === 'new' ? t('home.buttons.start') : t('home.buttons.continue')}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -280,9 +282,9 @@ export default function Home() {
         {/* Info cards */}
         <div className="grid grid-cols-3 gap-3 mt-6">
           {[
-            { label: '153 Safeguards', desc: 'CIS Controls v8.1', icon: '🛡️' },
-            { label: '3 Risk Levels', desc: 'IG1, IG2, IG3', icon: '📊' },
-            { label: 'PDF Report', desc: 'Exportable results', icon: '📄' },
+            { label: t('home.features.safeguards.label'), desc: t('home.features.safeguards.desc'), icon: '🛡️' },
+            { label: t('home.features.riskLevels.label'), desc: t('home.features.riskLevels.desc'), icon: '📊' },
+            { label: t('home.features.pdfReport.label'), desc: t('home.features.pdfReport.desc'), icon: '📄' },
           ].map(item => (
             <div key={item.label} className="bg-white rounded-xl border p-3 text-center shadow-sm">
               <div className="text-2xl mb-1">{item.icon}</div>
@@ -296,7 +298,7 @@ export default function Home() {
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
           <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-blue-700">
-            <strong>Demo:</strong> Use organization code <code className="font-mono bg-blue-100 px-1 rounded">DEMO001</code> to try the tool. Contact your admin to set up your organization's code.
+            <strong>{t('home.demoNoteStrong')}</strong> {t('home.demoNoteText')}
           </p>
         </div>
       </div>
