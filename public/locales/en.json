@@ -268,5 +268,37 @@
   "languageSwitcher": {
     "tooltip": "Change language",
     "loading": "Loading..."
+  },
+  "license": {
+    "footerLink": "License & Credits",
+    "title": "License & Third-Party Credits",
+    "close": "Close",
+    "softwareHeading": "Software License",
+    "softwareLine1": "This tool is free and open-source software released under the GNU Affero General Public License v3.0 (AGPL-3.0).",
+    "softwareLine2": "You are free to use, study, modify, and redistribute it. If you deploy a modified version as a hosted service, the AGPL requires that you make your source modifications available to the users of that service.",
+    "softwareAgplNote": "The software comes with ABSOLUTELY NO WARRANTY — see the full license for details.",
+    "fullAgplLink": "Read the full AGPL-3.0 text",
+    "repoLicenseLink": "View LICENSE file",
+    "thirdPartyHeading": "Third-Party Content",
+    "thirdPartyIntro": "This tool implements and references the following third-party frameworks. They are the property of their respective owners and are NOT covered by the AGPL license above.",
+    "cisControls": {
+      "title": "CIS Controls v8.1",
+      "copyright": "© 2021 Center for Internet Security, Inc. (CIS)",
+      "terms": "The 153 safeguard titles, descriptions, and NIST mappings are derived from CIS Controls v8.1 and are used under the CIS Terms of Use for non-commercial purposes. Commercial redistribution requires a separate license from CIS."
+    },
+    "cisRam": {
+      "title": "CIS Risk Assessment Method (CIS RAM) v2.1",
+      "copyright": "© Center for Internet Security, Inc.",
+      "terms": "The scoring methodology, IG screening, and expectancy/impact scales implemented here are derived from the published CIS RAM v2.1 specification."
+    },
+    "vcdb": {
+      "title": "Verizon VERIS Community Database (VCDB)",
+      "copyright": "Statistical incident data used in IG1 expectancy calculations is derived from the publicly available VCDB dataset."
+    },
+    "cisTermsLink": "Read the current CIS Terms of Use",
+    "trademarksHeading": "Trademarks",
+    "trademarksText": "\"CIS\", \"CIS Controls\", \"CIS RAM\", and \"Center for Internet Security\" are trademarks of the Center for Internet Security, Inc. This project is not affiliated with, endorsed by, or sponsored by CIS.",
+    "noWarrantyHeading": "No Warranty",
+    "noWarrantyText": "This tool is provided \"as is\", without warranty of any kind. Assessment results are a planning aid, not a legal compliance certification. Organizations remain responsible for their own security posture and regulatory obligations."
   }
 }

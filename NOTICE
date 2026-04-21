@@ -1,0 +1,72 @@
+CIS RAM v2.1 Risk Assessment Tool
+=================================
+
+Copyright (C) 2026 eQualit.ie and contributors.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public
+License along with this program. If not, see:
+<https://www.gnu.org/licenses/agpl-3.0.html>
+
+Because this is network-accessible software, the AGPL requires that
+operators who modify the source code and run it as a hosted service
+make those modifications available to their users.
+
+
+Third-Party Content
+-------------------
+
+This tool implements and references the following third-party
+frameworks and content. These are the property of their respective
+owners and are NOT covered by the AGPL-3.0 license that applies to
+this codebase:
+
+1. CIS Controls v8.1
+   Copyright (C) 2021 Center for Internet Security, Inc. (CIS)
+   https://www.cisecurity.org/controls/v8
+
+   The 153 safeguard titles, descriptions, asset classes, and NIST
+   function mappings embedded in src/lib/safeguards.js are derived
+   from the CIS Controls v8.1 framework. CIS Controls are made
+   available by CIS for non-commercial use under the CIS Terms of
+   Use. Commercial use, redistribution, or incorporation into a
+   commercial product requires a separate license from CIS.
+
+2. CIS Risk Assessment Method (CIS RAM) v2.1
+   Copyright (C) Center for Internet Security, Inc. (CIS)
+   https://www.cisecurity.org/insights/white-papers/cis-ram-risk-assessment-method
+
+   The scoring methodology, expectancy/impact scales, IG1/IG2/IG3
+   screening logic, and VCDB expectancy lookup tables implemented
+   in src/lib/calculations.js and src/lib/safeguards.js are derived
+   from the published CIS RAM v2.1 specification. CIS RAM is made
+   available by CIS under the same non-commercial terms as above.
+
+3. Verizon VCDB (VERIS Community Database)
+   https://github.com/vz-risk/VCDB
+
+   Statistical incident data referenced in the IG1 expectancy
+   calculation is derived from the publicly available VCDB dataset
+   maintained by the Verizon VERIS project.
+
+Users and operators of this tool are responsible for ensuring their
+deployment complies with the applicable CIS Terms of Use. For the
+most current CIS terms, see:
+https://www.cisecurity.org/terms-and-conditions
+
+
+Trademarks
+----------
+
+"CIS", "CIS Controls", "CIS RAM", and "Center for Internet Security"
+are trademarks of the Center for Internet Security, Inc. This project
+is not affiliated with, endorsed by, or sponsored by CIS.

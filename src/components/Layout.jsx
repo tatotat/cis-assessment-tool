@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, ChevronRight, LayoutDashboard, Mail, Globe } from 'lucide-react';
+import { Shield, ChevronRight, LayoutDashboard, Mail, Globe, Scale } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
 import { getSettings } from '../lib/settings';
 import LanguageSwitcher from './LanguageSwitcher';
+import LicenseModal from './LicenseModal';
 
 export default function Layout() {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const { status, sessionId, reset } = useAssessmentStore();
   const settings = useMemo(() => getSettings(), []);
+  const [licenseOpen, setLicenseOpen] = useState(false);
 
   const steps = [
     { path: '/', label: t('layout.steps.identify'), step: 1 },
@@ -153,11 +155,21 @@ export default function Layout() {
                   {settings.contactUrl.replace(/^https?:\/\//, '')}
                 </a>
               )}
+              <button
+                type="button"
+                onClick={() => setLicenseOpen(true)}
+                className="flex items-center gap-1.5 text-gray-500 hover:text-primary-600 transition-colors"
+              >
+                <Scale className="w-3.5 h-3.5" />
+                {t('license.footerLink')}
+              </button>
               <p>{settings.footerRight || 'Center for Internet Security'}</p>
             </div>
           </div>
         </div>
       </footer>
+
+      <LicenseModal open={licenseOpen} onClose={() => setLicenseOpen(false)} />
     </div>
   );
 }
