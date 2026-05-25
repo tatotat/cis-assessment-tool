@@ -31,5 +31,14 @@ npm-debug.log*
 *.pdf
 *.html
 
-# Claude config (local session only)
+# Claude config + local-only working notes
 .claude/
+CLAUDE.md
+context.md
+
+# Production release artifacts
+cis-tool-production-*.zip
+releases/
+
+# Stray sibling projects
+phishing_quiz/
