@@ -12,10 +12,10 @@ import {
 import { getSafeguardsForIG } from '../lib/safeguards';
 import {
   createAssessment,
-  updateAssessment,
+  updateAssessmentBySession,
   upsertResponse,
   getAssessmentBySessionId,
-  getResponsesForAssessment,
+  getResponsesBySession,
   getOrganizationByCode,
 } from '../lib/supabase';
 
@@ -67,7 +67,7 @@ const useAssessmentStore = create(
               return false;
             }
             // Load responses
-            const { data: existingResponses } = await getResponsesForAssessment(assessment.id);
+            const { data: existingResponses } = await getResponsesBySession(resumeSessionId);
             const responsesMap = {};
             if (existingResponses) {
               existingResponses.forEach(r => { responsesMap[r.safeguard_id] = r; });
@@ -132,7 +132,7 @@ const useAssessmentStore = create(
         const ig = determineIG(answers);
         const score = getIGScore(answers);
         const safeguards = getSafeguardsForIG(ig);
-        const { assessmentId } = get();
+        const { sessionId } = get();
 
         set({
           screeningAnswers: answers,
@@ -144,8 +144,8 @@ const useAssessmentStore = create(
           status: 'in_progress',
         });
 
-        if (assessmentId) {
-          await updateAssessment(assessmentId, {
+        if (sessionId) {
+          await updateAssessmentBySession(sessionId, {
             implementation_group: ig,
             ig_screening_answers: answers,
             ig_screening_score: score,
@@ -162,7 +162,10 @@ const useAssessmentStore = create(
         const { assessmentId, sessionId, responses, implementationGroup, safeguards } = get();
 
         const safeguard = safeguards.find(s => s.id === safeguardId);
-        if (!safeguard) return;
+        if (!safeguard) {
+          set({ saveStatus: 'error' });
+          return;
+        }
 
         // Calculate risk score
         const riskScore = calculateRiskScore(responseData, implementationGroup);
@@ -174,8 +177,15 @@ const useAssessmentStore = create(
           expectancyScore = calculateIG1Expectancy(safeguard.assetClass, responseData.maturity_score);
         }
 
+        // Whitelist writable columns — a resumed session's responseData carries
+        // DB metadata (id, created_at, updated_at) that must not be upserted back
         const fullResponse = {
-          ...responseData,
+          maturity_score: responseData.maturity_score ?? null,
+          impact_mission: responseData.impact_mission ?? null,
+          impact_operational: responseData.impact_operational ?? null,
+          impact_obligations: responseData.impact_obligations ?? null,
+          impact_financial: responseData.impact_financial ?? null,
+          notes: responseData.notes ?? null,
           assessment_id: assessmentId,
           session_id: sessionId,
           safeguard_id: safeguardId,
@@ -197,8 +207,8 @@ const useAssessmentStore = create(
             r.risk_score !== null && r.risk_score !== undefined
           ).length;
 
-          if (assessmentId) {
-            await updateAssessment(assessmentId, {
+          if (sessionId) {
+            await updateAssessmentBySession(sessionId, {
               completed_safeguards: completedCount,
             });
           }
@@ -221,17 +231,20 @@ const useAssessmentStore = create(
 
       // Complete the assessment
       async completeAssessment() {
-        const { assessmentId, responses, implementationGroup, safeguards } = get();
+        const { sessionId, responses, implementationGroup, safeguards } = get();
         const allResponses = Object.values(responses);
+        const scoredCount = allResponses.filter(r =>
+          r.risk_score !== null && r.risk_score !== undefined
+        ).length;
         const ori = calculateORI(allResponses, implementationGroup);
 
         set({ status: 'completed' });
 
-        if (assessmentId) {
-          await updateAssessment(assessmentId, {
+        if (sessionId) {
+          await updateAssessmentBySession(sessionId, {
             status: 'completed',
             organizational_risk_index: ori,
-            completed_safeguards: allResponses.length,
+            completed_safeguards: scoredCount,
             completed_at: new Date().toISOString(),
           });
         }

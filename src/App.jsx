@@ -13,7 +13,7 @@ import AdminLogin from './pages/admin/Login';
 import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
 import AdminLanguages from './pages/admin/Languages';
-import { supabase, IS_DEMO_MODE } from './lib/supabase';
+import { supabase, IS_DEMO_MODE, checkIsAdmin } from './lib/supabase';
 import useAssessmentStore from './stores/assessmentStore';
 import { applyStoredBranding } from './lib/settings';
 
@@ -32,15 +32,24 @@ function ProtectedAdminRoute({ children }) {
       return;
     }
 
-    // Supabase mode: get session once on mount, then listen for changes
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) setAdminUser(session.user);
-    });
+    // Supabase mode: a session alone is not enough — the user must also have
+    // role='admin' in profiles, otherwise any authenticated user could reach
+    // the admin UI by navigating here directly
+    async function resolveSession(session) {
+      if (!session?.user) {
+        setSession(null);
+        setAdminUser(null);
+        return;
+      }
+      const { isAdmin } = await checkIsAdmin();
+      setSession(isAdmin ? session : null);
+      setAdminUser(isAdmin ? session.user : null);
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => resolveSession(session));
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setAdminUser(session?.user || null);
+      resolveSession(session);
     });
 
     return () => subscription.unsubscribe();

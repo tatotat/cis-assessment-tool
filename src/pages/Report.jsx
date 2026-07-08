@@ -429,14 +429,18 @@ export default function Report() {
         autoTable(doc, {
           startY: 24,
           head: [['Safeguard', 'Title', 'Asset Class', 'Risk Score', 'Expectancy', 'Max Impact']],
-          body: immediateActions.slice(0, 20).map(r => [
-            r.safeguard_id,
-            (r.title || r.safeguard_id).length > 30 ? (r.title || r.safeguard_id).slice(0, 30) + '…' : (r.title || r.safeguard_id),
-            r.asset_class,
-            r.risk_score,
-            ig === 1 ? r.expectancy_score : r.expectancy_score,
-            Math.max(r.impact_mission || 0, r.impact_operational || 0, r.impact_obligations || 0, r.impact_financial || 0),
-          ]),
+          body: immediateActions.slice(0, 20).map(r => {
+            const sg = SAFEGUARDS.find(s => s.id === r.safeguard_id);
+            const title = sg?.friendlyTitle || sg?.title || r.safeguard_id;
+            return [
+              r.safeguard_id,
+              title.length > 30 ? title.slice(0, 30) + '…' : title,
+              r.asset_class,
+              r.risk_score,
+              r.expectancy_score,
+              Math.max(r.impact_mission || 0, r.impact_operational || 0, r.impact_obligations || 0, r.impact_financial || 0),
+            ];
+          }),
           headStyles: { fillColor: [239, 68, 68], textColor: 255 },
           alternateRowStyles: { fillColor: [255, 245, 245] },
           styles: { fontSize: 8 },

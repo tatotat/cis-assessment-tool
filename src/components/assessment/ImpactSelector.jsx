@@ -88,8 +88,11 @@ function ImpactRow({ label, value, onChange, options, required }) {
 }
 
 export default function ImpactSelector({ igLevel, values, onChange }) {
+  // Pass only the changed field — spreading the (possibly stale) values prop
+  // here can wipe selections made between renders; the parent merges into
+  // its previous state
   const handleChange = (field, score) => {
-    onChange({ ...values, [field]: score });
+    onChange({ [field]: score });
   };
 
   const missionOptions = igLevel === 1 ? IG1_MISSION_IMPACTS : IG23_MISSION_IMPACTS;

@@ -7,7 +7,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-k
 export const IS_DEMO_MODE =
   !import.meta.env.VITE_SUPABASE_URL ||
   import.meta.env.VITE_SUPABASE_URL.includes('placeholder') ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY === 'placeholder-anon-key';
+  !import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY.includes('placeholder');
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -64,6 +65,9 @@ const _db = {
 };
 
 function genId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
     return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
@@ -79,12 +83,15 @@ export async function getOrganizationByCode(code) {
       ? { data: org, error: null }
       : { data: null, error: { message: 'Organization not found' } };
   }
-  const { data, error } = await supabase
-    .from('organizations')
-    .select('*')
-    .eq('code', code.toUpperCase())
-    .single();
-  return { data, error };
+  // RPC: anonymous lookup requires the exact code and returns only safe columns
+  const { data, error } = await supabase.rpc('get_org_by_code', {
+    p_code: code.toUpperCase(),
+  });
+  const org = Array.isArray(data) ? data[0] : data;
+  if (error) return { data: null, error };
+  return org
+    ? { data: org, error: null }
+    : { data: null, error: { message: 'Organization not found' } };
 }
 
 export async function createOrganization(org) {
@@ -185,12 +192,13 @@ export async function createAssessment(assessment) {
     _db.assessments.push(newAssessment);
     return { data: newAssessment, error: null };
   }
-  const { data, error } = await supabase
-    .from('assessments')
-    .insert([assessment])
-    .select()
-    .single();
-  return { data, error };
+  const { data, error } = await supabase.rpc('create_assessment', {
+    p_session_id: assessment.session_id,
+    p_organization_id: assessment.organization_id,
+    p_assessor_email: assessment.assessor_email,
+  });
+  const row = Array.isArray(data) ? data[0] : data;
+  return { data: row || null, error };
 }
 
 export async function getAssessmentBySessionId(sessionId) {
@@ -200,28 +208,30 @@ export async function getAssessmentBySessionId(sessionId) {
     const org = _db.organizations.find(o => o.id === assessment.organization_id);
     return { data: { ...assessment, organizations: org || null }, error: null };
   }
-  const { data, error } = await supabase
-    .from('assessments')
-    .select('*, organizations(*)')
-    .eq('session_id', sessionId)
-    .single();
-  return { data, error };
+  const { data, error } = await supabase.rpc('get_assessment_by_session', {
+    p_session_id: sessionId,
+  });
+  if (error) return { data: null, error };
+  return data
+    ? { data, error: null }
+    : { data: null, error: { message: 'Session not found' } };
 }
 
-export async function updateAssessment(id, updates) {
+// Update an assessment via its session id (the anonymous flow's bearer token).
+// Only fields whitelisted in the update_assessment_by_session RPC are applied.
+export async function updateAssessmentBySession(sessionId, updates) {
   if (IS_DEMO_MODE) {
-    const idx = _db.assessments.findIndex(a => a.id === id);
+    const idx = _db.assessments.findIndex(a => a.session_id === sessionId);
     if (idx === -1) return { data: null, error: { message: 'Not found' } };
     _db.assessments[idx] = { ..._db.assessments[idx], ...updates, updated_at: new Date().toISOString() };
     return { data: _db.assessments[idx], error: null };
   }
-  const { data, error } = await supabase
-    .from('assessments')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-  return { data, error };
+  const { data, error } = await supabase.rpc('update_assessment_by_session', {
+    p_session_id: sessionId,
+    p_updates: updates,
+  });
+  const row = Array.isArray(data) ? data[0] : data;
+  return { data: row || null, error };
 }
 
 export async function getAllAssessments() {
@@ -265,25 +275,23 @@ export async function upsertResponse(response) {
     _db.responses[key] = { id: genId(), ...response, updated_at: new Date().toISOString() };
     return { data: _db.responses[key], error: null };
   }
-  const { data, error } = await supabase
-    .from('assessment_responses')
-    .upsert([response], { onConflict: 'assessment_id,safeguard_id' })
-    .select()
-    .single();
-  return { data, error };
+  const { data, error } = await supabase.rpc('upsert_response_by_session', {
+    p_session_id: response.session_id,
+    p_response: response,
+  });
+  const row = Array.isArray(data) ? data[0] : data;
+  return { data: row || null, error };
 }
 
-export async function getResponsesForAssessment(assessmentId) {
+export async function getResponsesBySession(sessionId) {
   if (IS_DEMO_MODE) {
-    const responses = Object.values(_db.responses).filter(r => r.assessment_id === assessmentId);
+    const responses = Object.values(_db.responses).filter(r => r.session_id === sessionId);
     return { data: responses, error: null };
   }
-  const { data, error } = await supabase
-    .from('assessment_responses')
-    .select('*')
-    .eq('assessment_id', assessmentId)
-    .order('safeguard_id');
-  return { data, error };
+  const { data, error } = await supabase.rpc('get_responses_by_session', {
+    p_session_id: sessionId,
+  });
+  return { data: data || [], error };
 }
 
 // ─── Auth helpers ──────────────────────────────────────────────────────────────

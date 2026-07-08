@@ -43,9 +43,18 @@
       "continue": "Continue Assessment"
     },
     "features": {
-      "safeguards": { "label": "153 Safeguards", "desc": "CIS Controls v8.1" },
-      "riskLevels": { "label": "3 Risk Levels", "desc": "IG1, IG2, IG3" },
-      "pdfReport": { "label": "PDF Report", "desc": "Exportable results" }
+      "safeguards": {
+        "label": "153 Safeguards",
+        "desc": "CIS Controls v8.1"
+      },
+      "riskLevels": {
+        "label": "3 Risk Levels",
+        "desc": "IG1, IG2, IG3"
+      },
+      "pdfReport": {
+        "label": "PDF Report",
+        "desc": "Exportable results"
+      }
     },
     "demoNoteStrong": "Demo:",
     "demoNoteText": "Use organization code DEMO001 to try the tool. Contact your admin to set up your organization's code."
@@ -68,45 +77,90 @@
         "question": "What is the size of your organization?",
         "description": "Count all full-time and part-time employees.",
         "options": {
-          "1": { "label": "Small", "detail": "Fewer than 50 employees" },
-          "2": { "label": "Medium", "detail": "50 to 999 employees" },
-          "3": { "label": "Large", "detail": "1,000 or more employees" }
+          "1": {
+            "label": "Small",
+            "detail": "Fewer than 50 employees"
+          },
+          "2": {
+            "label": "Medium",
+            "detail": "50 to 999 employees"
+          },
+          "3": {
+            "label": "Large",
+            "detail": "1,000 or more employees"
+          }
         }
       },
       "2": {
         "question": "What is your IT security staffing level?",
         "description": "Who manages cybersecurity in your organization?",
         "options": {
-          "1": { "label": "None / Part-time", "detail": "No dedicated IT security; security handled as-needed" },
-          "2": { "label": "IT with Security Role", "detail": "Some IT staff with security responsibilities" },
-          "3": { "label": "Dedicated Security Team", "detail": "Full-time security professionals or a SOC" }
+          "1": {
+            "label": "None / Part-time",
+            "detail": "No dedicated IT security; security handled as-needed"
+          },
+          "2": {
+            "label": "IT with Security Role",
+            "detail": "Some IT staff with security responsibilities"
+          },
+          "3": {
+            "label": "Dedicated Security Team",
+            "detail": "Full-time security professionals or a SOC"
+          }
         }
       },
       "3": {
         "question": "What type of data does your organization handle?",
         "description": "Consider the most sensitive data you process or store.",
         "options": {
-          "1": { "label": "Basic Business Data", "detail": "General business operations, no sensitive PII or regulated data" },
-          "2": { "label": "Sensitive Customer / Financial", "detail": "Customer PII, financial records, healthcare data" },
-          "3": { "label": "Highly Regulated / Classified", "detail": "Government, classified, critical infrastructure data" }
+          "1": {
+            "label": "Basic Business Data",
+            "detail": "General business operations, no sensitive PII or regulated data"
+          },
+          "2": {
+            "label": "Sensitive Customer / Financial",
+            "detail": "Customer PII, financial records, healthcare data"
+          },
+          "3": {
+            "label": "Highly Regulated / Classified",
+            "detail": "Government, classified, critical infrastructure data"
+          }
         }
       },
       "4": {
         "question": "What are your compliance and regulatory requirements?",
         "description": "Consider all applicable laws, regulations, and contractual requirements.",
         "options": {
-          "1": { "label": "None / Minimal", "detail": "No significant regulatory obligations" },
-          "2": { "label": "Some Regulations", "detail": "PCI-DSS, HIPAA, GDPR, SOC 2, or similar" },
-          "3": { "label": "Extensive Regulation", "detail": "FISMA, FedRAMP, CMMC, NERC CIP, multiple overlapping regulations" }
+          "1": {
+            "label": "None / Minimal",
+            "detail": "No significant regulatory obligations"
+          },
+          "2": {
+            "label": "Some Regulations",
+            "detail": "PCI-DSS, HIPAA, GDPR, SOC 2, or similar"
+          },
+          "3": {
+            "label": "Extensive Regulation",
+            "detail": "FISMA, FedRAMP, CMMC, NERC CIP, multiple overlapping regulations"
+          }
         }
       },
       "5": {
         "question": "How would you describe your technology environment?",
         "description": "Consider your IT infrastructure complexity.",
         "options": {
-          "1": { "label": "Basic IT", "detail": "Small office network, cloud services, standard endpoints" },
-          "2": { "label": "Moderate Complexity", "detail": "Multiple sites, mixed cloud/on-prem, custom applications" },
-          "3": { "label": "Complex / Critical", "detail": "Multi-site, OT/ICS, critical infrastructure, advanced services" }
+          "1": {
+            "label": "Basic IT",
+            "detail": "Small office network, cloud services, standard endpoints"
+          },
+          "2": {
+            "label": "Moderate Complexity",
+            "detail": "Multiple sites, mixed cloud/on-prem, custom applications"
+          },
+          "3": {
+            "label": "Complex / Critical",
+            "detail": "Multi-site, OT/ICS, critical infrastructure, advanced services"
+          }
         }
       }
     },
@@ -152,11 +206,26 @@
       "finalizing": "Finalizing..."
     },
     "expectancy": {
-      "1": { "label": "Very Unlikely", "detail": "We have strong protections and no known threats in this area" },
-      "2": { "label": "Possible but Rare", "detail": "Could happen, but maybe only once every few years" },
-      "3": { "label": "Occasional", "detail": "Happens sometimes — roughly once a year is realistic" },
-      "4": { "label": "Common", "detail": "Happens regularly in our sector, could happen to us soon" },
-      "5": { "label": "Frequent or Active", "detail": "Could be happening right now or happened recently" }
+      "1": {
+        "label": "Very Unlikely",
+        "detail": "We have strong protections and no known threats in this area"
+      },
+      "2": {
+        "label": "Possible but Rare",
+        "detail": "Could happen, but maybe only once every few years"
+      },
+      "3": {
+        "label": "Occasional",
+        "detail": "Happens sometimes — roughly once a year is realistic"
+      },
+      "4": {
+        "label": "Common",
+        "detail": "Happens regularly in our sector, could happen to us soon"
+      },
+      "5": {
+        "label": "Frequent or Active",
+        "detail": "Could be happening right now or happened recently"
+      }
     },
     "riskScore": {
       "whatItMeans": "What this score means",
@@ -180,6 +249,22 @@
         "what": "This is the worst-case combination: incidents in this area are likely AND the damage could be severe or catastrophic. This is a critical vulnerability.",
         "impact": "This must be addressed within 30 days. Leaving this unresolved significantly increases the chance of a serious cybersecurity incident.",
         "orgEffect": "A successful attack exploiting this weakness could have severe consequences — including financial loss, regulatory penalties, data theft, or inability to operate."
+      }
+    },
+    "ofTotal": "of {{total}}",
+    "scoreContext": {
+      "ig1": {
+        "veryLow": "Score {{score}}/9 — Very low combined risk.",
+        "low": "Score {{score}}/9 — Low risk, but worth monitoring.",
+        "unacceptable": "Score {{score}}/9 — This gap could cause real operational disruption if exploited.",
+        "max": "Score {{score}}/9 — Maximum risk level. This gap could lead to severe or irreversible harm."
+      },
+      "ig23": {
+        "veryLow": "Score {{score}}/25 — Very low combined risk.",
+        "manageable": "Score {{score}}/25 — Manageable risk level.",
+        "meaningful": "Score {{score}}/25 — Meaningful risk. An incident here could disrupt operations or cause financial harm.",
+        "serious": "Score {{score}}/25 — Serious risk. An incident could cause major organizational disruption.",
+        "catastrophic": "Score {{score}}/25 — Catastrophic risk level. An incident here could threaten the organization's viability."
       }
     }
   },

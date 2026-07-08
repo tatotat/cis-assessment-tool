@@ -101,9 +101,9 @@ create policy "Users can view their own organization" on public.organizations
     id in (select organization_id from public.profiles where id = auth.uid())
   );
 
--- Allow unauthenticated lookup by org code (for assessment flow)
-create policy "Public can look up organization by code" on public.organizations
-  for select using (true);
+-- NOTE: there is intentionally NO public SELECT policy on organizations.
+-- Anonymous org lookup goes through the get_org_by_code() RPC (below),
+-- which requires the exact code and returns only safe columns.
 
 -- is_admin() — recursion-safe helper used by RLS policies.
 -- SECURITY DEFINER runs as postgres (bypasses RLS internally),
@@ -135,24 +135,24 @@ create policy "Admins can manage profiles" on public.profiles
   with check (public.is_admin());
 
 -- Assessment Policies
-create policy "Assessments are org-scoped" on public.assessments
-  for all using (
+-- Direct table access is limited to admins and (read-only) org members.
+-- The anonymous assessment flow uses the session-scoped RPCs below —
+-- RLS cannot see client-side .eq() filters, so USING (true) policies
+-- would expose every row to anyone holding the public anon key.
+create policy "Admins manage assessments" on public.assessments
+  for all
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy "Org members can view their org's assessments" on public.assessments
+  for select using (
     organization_id in (
       select organization_id from public.profiles where id = auth.uid()
-    ) or
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    )
   );
 
--- Allow public insert/select for assessments (non-auth flow uses session_id)
-create policy "Public can create and view assessments by session" on public.assessments
-  for all using (true)
-  with check (true);
-
--- App Users Policies
+-- App Users Policies (admin-only — contains an email registry)
 alter table public.app_users enable row level security;
-
-create policy "Public can view app_users" on public.app_users
-  for select using (true);
 
 create policy "Admins manage app_users" on public.app_users
   for all
@@ -160,9 +160,20 @@ create policy "Admins manage app_users" on public.app_users
   with check (public.is_admin());
 
 -- Assessment Response Policies
-create policy "Responses are session-scoped" on public.assessment_responses
-  for all using (true)
-  with check (true);
+create policy "Admins manage responses" on public.assessment_responses
+  for all
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create policy "Org members can view their org's responses" on public.assessment_responses
+  for select using (
+    assessment_id in (
+      select a.id from public.assessments a
+      where a.organization_id in (
+        select organization_id from public.profiles where id = auth.uid()
+      )
+    )
+  );
 
 -- Updated at trigger function
 create or replace function public.handle_updated_at()
@@ -192,13 +203,17 @@ create trigger handle_responses_updated_at
 
 -- Function to handle new user (auto-create profile)
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
 begin
   insert into public.profiles (id, email)
   values (new.id, new.email);
   return new;
 end;
-$$ language plpgsql security definer;
+$$;
 
 create trigger on_auth_user_created
   after insert on auth.users
@@ -217,6 +232,7 @@ create or replace function public.make_first_admin()
 returns json
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   admin_count int;
@@ -249,6 +265,189 @@ $$;
 --   UPDATE profiles SET role = 'admin' WHERE email = 'your@email.com';
 --
 -- ─────────────────────────────────────────────────────────────────────────────
+
+-- ─── Session-Scoped RPCs (anonymous assessment flow) ──────────────────────────
+-- The session_id is a crypto-random UUID generated client-side; knowing it is
+-- the credential. Each function touches only rows matching the given session.
+
+-- Organization lookup by exact code — returns only safe columns.
+create or replace function public.get_org_by_code(p_code text)
+returns table (id uuid, name text, code text)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select o.id, o.name, o.code
+  from public.organizations o
+  where o.code = upper(p_code);
+$$;
+
+-- Create a new assessment for a session.
+create or replace function public.create_assessment(
+  p_session_id text,
+  p_organization_id uuid,
+  p_assessor_email text
+)
+returns setof public.assessments
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_session_id is null or length(p_session_id) < 32 then
+    raise exception 'Invalid session id';
+  end if;
+  if not exists (select 1 from public.organizations where id = p_organization_id) then
+    raise exception 'Organization not found';
+  end if;
+  return query
+    insert into public.assessments (session_id, organization_id, assessor_email, status)
+    values (p_session_id, p_organization_id, lower(p_assessor_email), 'screening')
+    returning *;
+end;
+$$;
+
+-- Fetch an assessment (with its organization) by session id.
+create or replace function public.get_assessment_by_session(p_session_id text)
+returns json
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select to_jsonb(a) || jsonb_build_object('organizations', to_jsonb(o))
+  from public.assessments a
+  left join public.organizations o on o.id = a.organization_id
+  where a.session_id = p_session_id;
+$$;
+
+-- Update an assessment by session id. Only whitelisted fields are applied.
+create or replace function public.update_assessment_by_session(
+  p_session_id text,
+  p_updates jsonb
+)
+returns setof public.assessments
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  return query
+    update public.assessments set
+      implementation_group      = coalesce((p_updates->>'implementation_group')::int, implementation_group),
+      ig_screening_answers      = coalesce(p_updates->'ig_screening_answers', ig_screening_answers),
+      ig_screening_score        = coalesce((p_updates->>'ig_screening_score')::decimal, ig_screening_score),
+      assessor_name             = coalesce(p_updates->>'assessor_name', assessor_name),
+      status                    = coalesce(p_updates->>'status', status),
+      current_safeguard_index   = coalesce((p_updates->>'current_safeguard_index')::int, current_safeguard_index),
+      organizational_risk_index = coalesce((p_updates->>'organizational_risk_index')::decimal, organizational_risk_index),
+      total_safeguards          = coalesce((p_updates->>'total_safeguards')::int, total_safeguards),
+      completed_safeguards      = coalesce((p_updates->>'completed_safeguards')::int, completed_safeguards),
+      completed_at              = coalesce((p_updates->>'completed_at')::timestamptz, completed_at)
+    where session_id = p_session_id
+    returning *;
+end;
+$$;
+
+-- Upsert one safeguard response for a session.
+create or replace function public.upsert_response_by_session(
+  p_session_id text,
+  p_response jsonb
+)
+returns setof public.assessment_responses
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_assessment_id uuid;
+begin
+  select id into v_assessment_id
+  from public.assessments
+  where session_id = p_session_id;
+
+  if v_assessment_id is null then
+    raise exception 'Session not found';
+  end if;
+
+  return query
+    insert into public.assessment_responses (
+      assessment_id, session_id, safeguard_id, control_number, asset_class,
+      maturity_score, expectancy_score,
+      impact_mission, impact_operational, impact_obligations, impact_financial,
+      risk_score, risk_level, notes
+    )
+    values (
+      v_assessment_id,
+      p_session_id,
+      p_response->>'safeguard_id',
+      (p_response->>'control_number')::int,
+      p_response->>'asset_class',
+      (p_response->>'maturity_score')::int,
+      (p_response->>'expectancy_score')::decimal,
+      (p_response->>'impact_mission')::int,
+      (p_response->>'impact_operational')::int,
+      (p_response->>'impact_obligations')::int,
+      (p_response->>'impact_financial')::int,
+      (p_response->>'risk_score')::decimal,
+      p_response->>'risk_level',
+      p_response->>'notes'
+    )
+    on conflict (assessment_id, safeguard_id) do update set
+      maturity_score     = excluded.maturity_score,
+      expectancy_score   = excluded.expectancy_score,
+      impact_mission     = excluded.impact_mission,
+      impact_operational = excluded.impact_operational,
+      impact_obligations = excluded.impact_obligations,
+      impact_financial   = excluded.impact_financial,
+      risk_score         = excluded.risk_score,
+      risk_level         = excluded.risk_level,
+      notes              = excluded.notes,
+      updated_at         = now()
+    returning *;
+end;
+$$;
+
+-- Fetch all responses for a session (resume flow).
+create or replace function public.get_responses_by_session(p_session_id text)
+returns setof public.assessment_responses
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select r.*
+  from public.assessment_responses r
+  where r.session_id = p_session_id
+  order by r.safeguard_id;
+$$;
+
+grant execute on function public.get_org_by_code(text) to anon, authenticated;
+grant execute on function public.create_assessment(text, uuid, text) to anon, authenticated;
+grant execute on function public.get_assessment_by_session(text) to anon, authenticated;
+grant execute on function public.update_assessment_by_session(text, jsonb) to anon, authenticated;
+grant execute on function public.upsert_response_by_session(text, jsonb) to anon, authenticated;
+grant execute on function public.get_responses_by_session(text) to anon, authenticated;
+
+-- ─── Storage: "locales" bucket — public read, admin-only write ────────────────
+
+insert into storage.buckets (id, name, public)
+values ('locales', 'locales', true)
+on conflict (id) do nothing;
+
+create policy "Public read locales" on storage.objects
+  for select using (bucket_id = 'locales');
+
+create policy "Admins insert locales" on storage.objects
+  for insert with check (bucket_id = 'locales' and public.is_admin());
+
+create policy "Admins update locales" on storage.objects
+  for update using (bucket_id = 'locales' and public.is_admin())
+  with check (bucket_id = 'locales' and public.is_admin());
+
+create policy "Admins delete locales" on storage.objects
+  for delete using (bucket_id = 'locales' and public.is_admin());
 
 -- Seed a demo organization
 insert into public.organizations (name, code, industry, contact_email)

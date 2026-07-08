@@ -180,8 +180,12 @@ export function isResponseComplete(response, igLevel) {
   }
 }
 
-// Generate a unique session ID
+// Generate a unique session ID — session IDs act as resume tokens,
+// so prefer a cryptographically random UUID when available
 export function generateSessionId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Info, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
+import { determineIG } from '../lib/calculations';
 import clsx from 'clsx';
 
 // IG display config (colors only — labels/descriptions come from translations)
@@ -11,14 +12,6 @@ const IG_COLORS = {
   2: { color: 'bg-blue-50 border-blue-200 text-blue-800', badgeColor: 'bg-blue-100 text-blue-800', safeguardCount: 130 },
   3: { color: 'bg-purple-50 border-purple-200 text-purple-800', badgeColor: 'bg-purple-100 text-purple-800', safeguardCount: 153 },
 };
-
-function calculateIG(answers) {
-  if (answers.length < 5 || answers.some(a => !a)) return null;
-  const avg = answers.reduce((a, b) => a + b, 0) / answers.length;
-  if (avg <= 1.6) return 1;
-  if (avg <= 2.3) return 2;
-  return 3;
-}
 
 export default function Screening() {
   const { t } = useTranslation();
@@ -50,7 +43,7 @@ export default function Screening() {
   }, [sessionId]);
 
   const allAnswered = answers.every(a => a !== null);
-  const projectedIG = allAnswered ? calculateIG(answers) : null;
+  const projectedIG = allAnswered ? determineIG(answers) : null;
 
   async function handleContinue() {
     if (!allAnswered) return;
@@ -64,9 +57,11 @@ export default function Screening() {
   }
 
   function handleAnswer(questionIdx, value) {
-    const updated = [...answers];
-    updated[questionIdx] = value;
-    setAnswers(updated);
+    setAnswers(prev => {
+      const updated = [...prev];
+      updated[questionIdx] = value;
+      return updated;
+    });
     if (showResult) setShowResult(false);
   }
 

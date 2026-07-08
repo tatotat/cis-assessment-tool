@@ -27,20 +27,22 @@ const NIST_COLORS = {
 
 // These are now generated inside the component using t() — see getExpectancyOptions() / getRiskMeaning()
 
-function getRiskScoreContext(score, igLevel) {
-  const max = igLevel === 1 ? 9 : 25;
-  const pct = Math.round((score / max) * 100);
+function getRiskScoreContext(t, score, igLevel) {
   if (igLevel === 1) {
-    if (score <= 2) return `Score ${score}/9 — Very low combined risk.`;
-    if (score <= 4) return `Score ${score}/9 — Low risk, but worth monitoring.`;
-    if (score === 6) return `Score ${score}/9 — This gap could cause real operational disruption if exploited.`;
-    return `Score ${score}/9 — Maximum risk level. This gap could lead to severe or irreversible harm.`;
+    let band;
+    if (score <= 2) band = 'veryLow';
+    else if (score <= 4) band = 'low';
+    else if (score === 6) band = 'unacceptable';
+    else band = 'max';
+    return t(`assessment.scoreContext.ig1.${band}`, { score });
   }
-  if (score <= 4) return `Score ${score}/25 — Very low combined risk.`;
-  if (score <= 8) return `Score ${score}/25 — Manageable risk level.`;
-  if (score <= 15) return `Score ${score}/25 — Meaningful risk. An incident here could disrupt operations or cause financial harm.`;
-  if (score <= 20) return `Score ${score}/25 — Serious risk. An incident could cause major organizational disruption.`;
-  return `Score ${score}/25 — Catastrophic risk level. An incident here could threaten the organization's viability.`;
+  let band;
+  if (score <= 4) band = 'veryLow';
+  else if (score <= 8) band = 'manageable';
+  else if (score <= 15) band = 'meaningful';
+  else if (score <= 20) band = 'serious';
+  else band = 'catastrophic';
+  return t(`assessment.scoreContext.ig23.${band}`, { score });
 }
 
 function RiskScoreDisplay({ score, igLevel }) {
@@ -54,7 +56,7 @@ function RiskScoreDisplay({ score, igLevel }) {
     high: { headline: t('assessment.riskScore.high.headline'), icon: AlertTriangle, what: t('assessment.riskScore.high.what'), impact: t('assessment.riskScore.high.impact'), orgEffect: t('assessment.riskScore.high.orgEffect') },
   }[level];
   const Icon = meaning.icon;
-  const context = getRiskScoreContext(score, igLevel);
+  const context = getRiskScoreContext(t, score, igLevel);
 
   return (
     <div className={clsx(
@@ -294,10 +296,10 @@ export default function Assessment() {
           </h1>
           <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
             <span className="bg-primary-100 text-primary-800 font-semibold px-2 py-0.5 rounded text-xs">IG{ig}</span>
-            <span>{totalSafeguards} safeguards</span>
+            <span>{totalSafeguards} {t('assessment.safeguardsUnit')}</span>
             {sessionId && (
               <span className="font-mono text-xs text-gray-400 truncate hidden sm:block">
-                Session: {sessionId.slice(0, 8)}...
+                {t('assessment.session')} {sessionId.slice(0, 8)}...
               </span>
             )}
           </div>
@@ -359,7 +361,7 @@ export default function Assessment() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-2xl font-black text-gray-300">{currentIndex + 1}</div>
-                  <div className="text-xs text-gray-400">of {totalSafeguards}</div>
+                  <div className="text-xs text-gray-400">{t('assessment.ofTotal', { total: totalSafeguards })}</div>
                 </div>
               </div>
 
@@ -514,7 +516,9 @@ export default function Assessment() {
               </div>
               <div className="overflow-y-auto flex-1 scrollbar-thin">
                 {Object.entries(byControl).map(([controlNum, items]) => {
-                  const doneInControl = items.filter(s => responses[s.id]?.risk_score !== undefined).length;
+                  const doneInControl = items.filter(s =>
+                    responses[s.id]?.risk_score !== undefined && responses[s.id]?.risk_score !== null
+                  ).length;
                   return (
                     <div key={controlNum} className="border-b last:border-0">
                       <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 sticky top-0">
@@ -565,7 +569,7 @@ export default function Assessment() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
           <div className="absolute right-0 inset-y-0 w-80 bg-white flex flex-col">
             <div className="px-4 py-3 border-b flex items-center justify-between">
-              <h3 className="font-semibold">Controls ({completedCount}/{totalSafeguards})</h3>
+              <h3 className="font-semibold">{t('assessment.controls')} ({completedCount}/{totalSafeguards})</h3>
               <button onClick={() => setSidebarOpen(false)} className="text-gray-500">✕</button>
             </div>
             <div className="overflow-y-auto flex-1 scrollbar-thin">
