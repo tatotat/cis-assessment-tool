@@ -2,7 +2,7 @@
 
 A full-featured, non-technical-user-friendly web application implementing the **CIS Risk Assessment Method (RAM) v2.1**, aligned with **CIS Controls v8.1**. Built for multi-tenant organizations to conduct structured cybersecurity risk assessments and generate executive-ready reports.
 
-![CIS RAM Tool](cis_assessment_tool.png)
+> 📄 Quick overview: see [docs/ONE-PAGER.md](docs/ONE-PAGER.md)
 
 ---
 
@@ -40,12 +40,24 @@ A full-featured, non-technical-user-friendly web application implementing the **
 - **Assessments** — View all assessments with status, IG level, ORI, and PDF download
 - **Users** — Add, edit roles, and delete users per organization
 - **Settings** — Branding (logo URL, org name, primary color), disclaimer configuration
+- **Languages** — Upload translated language packs at runtime (see below)
+
+### Multilingual (i18n)
+- English ships built-in; **new languages need no rebuild**
+- Admins download the English JSON template from **Admin → Languages**, translate it, and upload — the pack is stored in Supabase Storage and live immediately
+- Users switch languages from the globe menu in the header (choice persists in the browser)
 
 ### Multi-Tenant & Session Architecture
 - Each organization has a unique **access code** (e.g. `DEMO001`)
 - Users identify by email + org code — no account creation required
-- Each assessment has a unique **session ID** (UUID in URL + localStorage) preventing response mixing
-- Admin area protected by Supabase email/password auth
+- Each assessment has a unique **crypto-random session ID** that acts as its resume token
+- Admin area protected by Supabase email/password auth + `role='admin'` check
+
+### Security Model
+- Row Level Security locks direct table access to **admins only** (org members get read-only access to their own org's data)
+- The anonymous assessment flow goes exclusively through `SECURITY DEFINER` RPC functions that require the session ID as a bearer token — without it, no assessment data is readable or writable
+- The `locales` translation bucket is public-read, admin-only-write
+- Existing deployments: apply `supabase/migrations/003_security_hardening.sql`; fresh installs get everything from `supabase/schema.sql`
 
 ### Demo Mode
 Runs fully offline without Supabase credentials using an in-memory data store:
@@ -131,12 +143,13 @@ Home (email + org code)
 
 ```
 src/
+├── i18n.js                  # i18next config — runtime language loading
 ├── lib/
 │   ├── safeguards.js        # All 153 CIS Controls v8.1 safeguards + VCDB lookup
 │   ├── calculations.js      # CIS RAM risk math (ORI, expectancy, risk scores)
 │   ├── recommendations.js   # Per-safeguard immediate/short/long-term actions
 │   ├── settings.js          # Branding settings (localStorage)
-│   └── supabase.js          # Supabase client + full demo/offline mode
+│   └── supabase.js          # Supabase client, session RPCs + full demo/offline mode
 ├── stores/
 │   └── assessmentStore.js   # Zustand global state
 ├── pages/
@@ -150,10 +163,13 @@ src/
 │       ├── Organizations.jsx
 │       ├── AssessmentsList.jsx
 │       ├── Users.jsx
-│       └── Settings.jsx
+│       ├── Settings.jsx
+│       └── Languages.jsx    # Runtime language pack management
 ├── components/
 │   ├── AdminLayout.jsx
 │   ├── Layout.jsx
+│   ├── LanguageSwitcher.jsx # Globe menu in header
+│   ├── LicenseModal.jsx     # AGPL + CIS attribution ("License & Credits")
 │   ├── assessment/
 │   │   ├── MaturitySelector.jsx
 │   │   ├── ImpactSelector.jsx
@@ -162,8 +178,12 @@ src/
 │       ├── RiskGauge.jsx
 │       ├── ControlScores.jsx
 │       └── RecommendationsPanel.jsx
+public/locales/
+├── en.json                  # Default English language pack
+└── manifest.json            # Available languages list
 supabase/
-└── schema.sql               # Full DB schema with RLS policies
+├── schema.sql               # Full DB schema: RLS + session-scoped RPCs (fresh installs)
+└── migrations/              # Incremental migrations for existing projects
 ```
 
 ---
@@ -187,14 +207,15 @@ supabase/
 ### ORI Levels
 | ORI | Level | Meaning |
 |-----|-------|---------|
-| 0–20 | Low | Strong security posture |
-| 21–40 | Guarded | Generally adequate with some gaps |
-| 41–60 | Elevated | Notable risk requiring attention |
-| 61–80 | High | Significant risk requiring prompt action |
-| 81–100 | Critical | Immediate remediation required |
+| 0–24 | Low | Strong security posture |
+| 25–49 | Moderate | Some controls need improvement |
+| 50–74 | Elevated | Significant improvements required across multiple areas |
+| 75–100 | Critical | Immediate action required across most control areas |
 
 ---
 
 ## License
 
-MIT
+**GNU AGPL-3.0** — free to use, study, modify, and redistribute; if you run a modified version as a hosted service, you must make your source modifications available to its users. See [LICENSE](LICENSE).
+
+Third-party content: **CIS Controls v8.1** and **CIS RAM v2.1** are © Center for Internet Security, Inc., available for non-commercial use under the [CIS Terms of Use](https://www.cisecurity.org/terms-and-conditions); VCDB incident data is from the Verizon VERIS Community Database. These are **not** covered by the AGPL — see [NOTICE](NOTICE). This project is not affiliated with, endorsed by, or sponsored by CIS.
