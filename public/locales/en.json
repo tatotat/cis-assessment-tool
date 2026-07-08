@@ -57,7 +57,13 @@
       }
     },
     "demoNoteStrong": "Demo:",
-    "demoNoteText": "Use organization code DEMO001 to try the tool. Contact your admin to set up your organization's code."
+    "demoNoteText": "Use organization code DEMO001 to try the tool. Contact your admin to set up your organization's code.",
+    "invite": {
+      "title": "You've been invited to assess {{org}}",
+      "hint": "Your email and organization are set from your invitation. Continue to begin.",
+      "resumeHint": "Welcome back — continue your assessment where you left off.",
+      "invalid": "This invitation link is invalid or has been revoked. You can still start an assessment using your organization code below."
+    }
   },
   "screening": {
     "title": "Implementation Group Screening",
@@ -297,7 +303,13 @@
     "searchSafeguards": "Search safeguards...",
     "filterAll": "All",
     "noResults": "No safeguards match your search.",
-    "printReport": "Print / Save PDF"
+    "printReport": "Print / Save PDF",
+    "training": {
+      "heading": "Recommended Training",
+      "intro": "Based on your weakest control areas, these training topics will have the greatest impact.",
+      "none": "No training gaps identified — your assessed controls are within acceptable risk levels.",
+      "exposure": "{{pct}}% exposure"
+    }
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -308,7 +320,81 @@
     "languages": "Languages",
     "signOut": "Sign Out",
     "assessmentTool": "Assessment Tool",
-    "console": "Admin Console"
+    "console": "Admin Console",
+    "enrollmentNav": "Enrollment",
+    "workplanNav": "Work Plan",
+    "trainingNav": "Training",
+    "enrollment": {
+      "title": "Enrollment",
+      "subtitle": "Invite people to take an assessment and track their progress.",
+      "viewWorkPlan": "View work plan",
+      "allAudits": "All audits",
+      "importTitle": "Invite people",
+      "auditLabel": "Audit label (optional)",
+      "auditLabelPlaceholder": "e.g. 2026 Annual Audit",
+      "uploadCsv": "Upload CSV",
+      "pasteLabel": "Emails",
+      "pasteHint": "One per line: email, or \"email, Full Name\". Duplicates are skipped.",
+      "importButton": "Add & generate links",
+      "noValidRows": "No valid email addresses found.",
+      "importResult": "Added {{inserted}} · skipped {{skipped}} duplicate(s).",
+      "copyFailed": "Could not copy to clipboard.",
+      "rosterTitle": "Roster",
+      "copyAll": "Copy all links",
+      "copied": "Copied!",
+      "downloadCsv": "Download CSV",
+      "empty": "No one enrolled yet. Add people above.",
+      "copyLink": "Copy invite link",
+      "regenerate": "Regenerate link",
+      "delete": "Remove",
+      "stats": {
+        "total": "Enrolled"
+      },
+      "status": {
+        "invited": "Invited",
+        "started": "Started",
+        "completed": "Completed"
+      },
+      "col": {
+        "person": "Person",
+        "audit": "Audit",
+        "status": "Status",
+        "actions": "Actions"
+      }
+    },
+    "training": {
+      "title": "Training Catalog",
+      "subtitle": "Customize the training content suggested to people based on their weakest controls.",
+      "customized": "Customized",
+      "fieldTitle": "Title",
+      "fieldSummary": "Summary",
+      "topics": "Topics",
+      "addTopic": "Add topic",
+      "topicName": "Topic",
+      "objective": "Learning objective",
+      "resourcesPlaceholder": "Label | https://url  (one per line)",
+      "saved": "Saved",
+      "save": "Save",
+      "reset": "Reset to default"
+    },
+    "workplan": {
+      "title": "Organizational Work Plan",
+      "subtitle": "A prioritized remediation roadmap aggregated across all completed assessments.",
+      "back": "Back to assessments",
+      "exportPdf": "Export PDF",
+      "noData": "No completed assessments yet for this organization.",
+      "basedOn": "Based on {{count}} completed assessment(s)",
+      "safeguardsAnalyzed": "{{count}} safeguards analyzed",
+      "affected": "{{affected}} of {{total}} flagged",
+      "trainingFocus": "Training Focus",
+      "exposure": "exposure",
+      "phase": {
+        "immediate": "Immediate — act now",
+        "thirty": "Within 30 days",
+        "ninety": "Within 90 days",
+        "longterm": "Long-term / best practice"
+      }
+    }
   },
   "languages": {
     "title": "Language Management",

@@ -13,6 +13,9 @@ import AdminLogin from './pages/admin/Login';
 import AdminUsers from './pages/admin/Users';
 import AdminSettings from './pages/admin/Settings';
 import AdminLanguages from './pages/admin/Languages';
+import AdminEnrollment from './pages/admin/Enrollment';
+import AdminTraining from './pages/admin/Training';
+import AdminWorkPlan from './pages/admin/WorkPlan';
 import { supabase, IS_DEMO_MODE, checkIsAdmin } from './lib/supabase';
 import useAssessmentStore from './stores/assessmentStore';
 import { applyStoredBranding } from './lib/settings';
@@ -97,6 +100,9 @@ export default function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="organizations" element={<Organizations />} />
           <Route path="assessments" element={<AssessmentsList />} />
+          <Route path="enrollment" element={<AdminEnrollment />} />
+          <Route path="workplan" element={<AdminWorkPlan />} />
+          <Route path="training" element={<AdminTraining />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="languages" element={<AdminLanguages />} />

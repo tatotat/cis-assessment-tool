@@ -21,6 +21,7 @@ const _db = {
       code: 'DEMO001',
       industry: 'Technology',
       contact_email: 'demo@example.com',
+      roster_enforced: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -30,12 +31,39 @@ const _db = {
       code: 'ACME001',
       industry: 'Healthcare',
       contact_email: 'security@acme.com',
+      roster_enforced: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
   ],
   assessments: [],
   responses: {},
+  // Enrollments (invite roster). demo-org-1 is open; demo-org-2 is roster-enforced.
+  enrollments: [
+    {
+      id: 'demo-enr-1', organization_id: 'demo-org-1', email: 'alice@demo.com',
+      full_name: 'Alice Admin', audit_label: '2026 Annual Audit',
+      invite_token: 'demoinvitealice0000000000000001', status: 'invited',
+      assessment_id: null, started_at: null, completed_at: null,
+      created_at: new Date(Date.now() - 5 * 864e5).toISOString(), updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'demo-enr-2', organization_id: 'demo-org-1', email: 'bob@demo.com',
+      full_name: 'Bob Builder', audit_label: '2026 Annual Audit',
+      invite_token: 'demoinvitebob000000000000000002', status: 'invited',
+      assessment_id: null, started_at: null, completed_at: null,
+      created_at: new Date(Date.now() - 5 * 864e5).toISOString(), updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'demo-enr-3', organization_id: 'demo-org-2', email: 'carol@acme.com',
+      full_name: 'Carol Chen', audit_label: 'Q3 Healthcare Review',
+      invite_token: 'demoinvitecarol00000000000000003', status: 'invited',
+      assessment_id: null, started_at: null, completed_at: null,
+      created_at: new Date(Date.now() - 3 * 864e5).toISOString(), updated_at: new Date().toISOString(),
+    },
+  ],
+  // Training catalog overrides (control_number -> entry). Empty = all defaults.
+  training_overrides: {},
   users: [
     {
       id: 'demo-user-1',
@@ -102,6 +130,7 @@ export async function createOrganization(org) {
       code: org.code.toUpperCase(),
       industry: org.industry || null,
       contact_email: org.contact_email || null,
+      roster_enforced: !!org.roster_enforced,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -119,6 +148,7 @@ export async function createOrganization(org) {
       code: org.code.toUpperCase(),
       industry: org.industry || null,
       contact_email: org.contact_email || null,
+      roster_enforced: !!org.roster_enforced,
     }])
     .select()
     .single();
@@ -171,11 +201,30 @@ export async function getAllOrganizations() {
 
 export async function createAssessment(assessment) {
   if (IS_DEMO_MODE) {
+    const orgId = assessment.organization_id;
+    const org = _db.organizations.find(o => o.id === orgId);
+    const email = (assessment.assessor_email || '').toLowerCase().trim();
+    const token = assessment.invite_token || null;
+
+    // Resolve enrollment (mirrors the create_assessment RPC logic)
+    let enrollment = null;
+    if (token) {
+      enrollment = _db.enrollments.find(e => e.invite_token === token && e.organization_id === orgId);
+      if (!enrollment) return { data: null, error: { message: 'Invalid or revoked invitation' } };
+    } else {
+      enrollment = [..._db.enrollments]
+        .filter(e => e.organization_id === orgId && e.email === email)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))[0] || null;
+      if (org?.roster_enforced && !enrollment) {
+        return { data: null, error: { message: 'This organization requires an invitation link' } };
+      }
+    }
+
     const newAssessment = {
       id: genId(),
       session_id: assessment.session_id || genId(),
-      organization_id: assessment.organization_id,
-      assessor_email: assessment.assessor_email,
+      organization_id: orgId,
+      assessor_email: enrollment ? enrollment.email : email,
       assessor_name: assessment.assessor_name || null,
       implementation_group: assessment.implementation_group || null,
       ig_screening_answers: assessment.ig_screening_answers || null,
@@ -190,12 +239,19 @@ export async function createAssessment(assessment) {
       updated_at: new Date().toISOString(),
     };
     _db.assessments.push(newAssessment);
+
+    if (enrollment) {
+      if (enrollment.status !== 'completed') enrollment.status = 'started';
+      enrollment.started_at = enrollment.started_at || new Date().toISOString();
+      enrollment.assessment_id = newAssessment.id;
+    }
     return { data: newAssessment, error: null };
   }
   const { data, error } = await supabase.rpc('create_assessment', {
     p_session_id: assessment.session_id,
     p_organization_id: assessment.organization_id,
     p_assessor_email: assessment.assessor_email,
+    p_invite_token: assessment.invite_token || null,
   });
   const row = Array.isArray(data) ? data[0] : data;
   return { data: row || null, error };
@@ -224,6 +280,11 @@ export async function updateAssessmentBySession(sessionId, updates) {
     const idx = _db.assessments.findIndex(a => a.session_id === sessionId);
     if (idx === -1) return { data: null, error: { message: 'Not found' } };
     _db.assessments[idx] = { ..._db.assessments[idx], ...updates, updated_at: new Date().toISOString() };
+    // Enrollment completion hook (mirrors the RPC)
+    if (updates.status === 'completed') {
+      const enr = _db.enrollments.find(e => e.assessment_id === _db.assessments[idx].id && e.status !== 'completed');
+      if (enr) { enr.status = 'completed'; enr.completed_at = new Date().toISOString(); }
+    }
     return { data: _db.assessments[idx], error: null };
   }
   const { data, error } = await supabase.rpc('update_assessment_by_session', {
@@ -292,6 +353,164 @@ export async function getResponsesBySession(sessionId) {
     p_session_id: sessionId,
   });
   return { data: data || [], error };
+}
+
+// Fetch all responses for a set of assessment ids (admin work-plan aggregation).
+export async function getResponsesForAssessments(assessmentIds) {
+  if (!assessmentIds || assessmentIds.length === 0) return { data: [], error: null };
+  if (IS_DEMO_MODE) {
+    const idSet = new Set(assessmentIds);
+    return { data: Object.values(_db.responses).filter(r => idSet.has(r.assessment_id)), error: null };
+  }
+  // Batch to keep the .in() list a sane size for large audits
+  const batches = [];
+  for (let i = 0; i < assessmentIds.length; i += 100) batches.push(assessmentIds.slice(i, i + 100));
+  const all = [];
+  for (const batch of batches) {
+    const { data, error } = await supabase
+      .from('assessment_responses')
+      .select('*')
+      .in('assessment_id', batch);
+    if (error) return { data: null, error };
+    if (data) all.push(...data);
+  }
+  return { data: all, error: null };
+}
+
+// ─── Enrollment helpers ─────────────────────────────────────────────────────────
+
+// Anonymous lookup by invite token (bearer credential for the invite flow).
+export async function getEnrollmentByToken(token) {
+  if (!token) return { data: null, error: { message: 'No token' } };
+  if (IS_DEMO_MODE) {
+    const e = _db.enrollments.find(x => x.invite_token === token);
+    if (!e) return { data: null, error: null };
+    const org = _db.organizations.find(o => o.id === e.organization_id);
+    const asm = _db.assessments.find(a => a.id === e.assessment_id);
+    return {
+      data: {
+        email: e.email, full_name: e.full_name, status: e.status, audit_label: e.audit_label,
+        organization: org ? { id: org.id, name: org.name, code: org.code } : null,
+        resume_session_id: asm ? asm.session_id : null,
+      },
+      error: null,
+    };
+  }
+  const { data, error } = await supabase.rpc('get_enrollment_by_token', { p_token: token });
+  return { data: data || null, error };
+}
+
+export async function getEnrollmentsByOrg(orgId, auditLabel = null) {
+  if (IS_DEMO_MODE) {
+    let rows = _db.enrollments.filter(e => e.organization_id === orgId);
+    if (auditLabel) rows = rows.filter(e => (e.audit_label || '') === auditLabel);
+    return { data: rows.sort((a, b) => b.created_at.localeCompare(a.created_at)), error: null };
+  }
+  let q = supabase.from('enrollments').select('*').eq('organization_id', orgId);
+  if (auditLabel) q = q.eq('audit_label', auditLabel);
+  const { data, error } = await q.order('created_at', { ascending: false });
+  return { data, error };
+}
+
+// Bulk-insert enrollments, skipping duplicates by (org, email, audit_label).
+// rows: [{ email, full_name }]. Returns { inserted, skipped }.
+export async function bulkCreateEnrollments(orgId, rows, auditLabel = null) {
+  const label = (auditLabel || '').trim() || null;
+  const cleaned = [];
+  const seen = new Set();
+  for (const r of rows) {
+    const email = (r.email || '').toLowerCase().trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) continue;
+    if (seen.has(email)) continue;
+    seen.add(email);
+    cleaned.push({ email, full_name: (r.full_name || '').trim() || null });
+  }
+  const { data: existing } = await getEnrollmentsByOrg(orgId, label);
+  const existingEmails = new Set((existing || []).map(e => e.email));
+  const toInsert = cleaned.filter(r => !existingEmails.has(r.email));
+  const skipped = cleaned.length - toInsert.length;
+
+  if (toInsert.length === 0) return { data: { inserted: 0, skipped }, error: null };
+
+  if (IS_DEMO_MODE) {
+    toInsert.forEach(r => {
+      _db.enrollments.push({
+        id: genId(), organization_id: orgId, email: r.email, full_name: r.full_name,
+        audit_label: label, invite_token: genId().replace(/-/g, ''), status: 'invited',
+        assessment_id: null, started_at: null, completed_at: null,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      });
+    });
+    return { data: { inserted: toInsert.length, skipped }, error: null };
+  }
+  const { error } = await supabase.from('enrollments').insert(
+    toInsert.map(r => ({ organization_id: orgId, email: r.email, full_name: r.full_name, audit_label: label }))
+  );
+  return { data: error ? null : { inserted: toInsert.length, skipped }, error };
+}
+
+export async function deleteEnrollment(id) {
+  if (IS_DEMO_MODE) {
+    _db.enrollments = _db.enrollments.filter(e => e.id !== id);
+    return { error: null };
+  }
+  const { error } = await supabase.from('enrollments').delete().eq('id', id);
+  return { error };
+}
+
+export async function regenerateEnrollmentToken(id) {
+  const newToken = genId().replace(/-/g, '');
+  if (IS_DEMO_MODE) {
+    const e = _db.enrollments.find(x => x.id === id);
+    if (e) e.invite_token = newToken;
+    return { data: e || null, error: null };
+  }
+  const { data, error } = await supabase
+    .from('enrollments')
+    .update({ invite_token: newToken })
+    .eq('id', id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+// ─── Training catalog helpers ───────────────────────────────────────────────────
+
+// Public read of admin overrides (merged over built-in defaults by the caller).
+export async function getTrainingCatalog() {
+  if (IS_DEMO_MODE) {
+    return { data: Object.values(_db.training_overrides), error: null };
+  }
+  const { data, error } = await supabase.rpc('get_training_catalog');
+  return { data: data || [], error };
+}
+
+export async function upsertTrainingEntry(entry) {
+  const row = {
+    control_number: entry.control_number,
+    title: entry.title,
+    summary: entry.summary || null,
+    topics: entry.topics || [],
+  };
+  if (IS_DEMO_MODE) {
+    _db.training_overrides[row.control_number] = { ...row, updated_at: new Date().toISOString() };
+    return { data: _db.training_overrides[row.control_number], error: null };
+  }
+  const { data, error } = await supabase
+    .from('training_catalog')
+    .upsert([row], { onConflict: 'control_number' })
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function resetTrainingEntry(controlNumber) {
+  if (IS_DEMO_MODE) {
+    delete _db.training_overrides[controlNumber];
+    return { error: null };
+  }
+  const { error } = await supabase.from('training_catalog').delete().eq('control_number', controlNumber);
+  return { error };
 }
 
 // ─── Auth helpers ──────────────────────────────────────────────────────────────

@@ -36,11 +36,26 @@ A full-featured, non-technical-user-friendly web application implementing the **
 
 ### Admin Console (`/admin`)
 - **Dashboard** — Assessment statistics and organization overview
-- **Organizations** — Create and manage multi-tenant organizations (unique org codes)
+- **Organizations** — Create and manage multi-tenant organizations (unique org codes); toggle **roster enforcement** per org
 - **Assessments** — View all assessments with status, IG level, ORI, and PDF download
+- **Enrollment** — Bulk-invite people via CSV/paste, generate per-person invite links, and track status (invited → started → completed)
+- **Work Plan** — Auto-generated, phased remediation roadmap aggregated across all completed assessments of an org, with PDF export
+- **Training** — Edit the per-CIS-Control training catalog surfaced to assessors
 - **Users** — Add, edit roles, and delete users per organization
 - **Settings** — Branding (logo URL, org name, primary color), disclaimer configuration
 - **Languages** — Upload translated language packs at runtime (see below)
+
+### Enrollment & Invitations (organization-scale audits)
+- Admins bulk-import a roster (CSV upload or paste `email, Name` lines), grouped by an optional **audit label**
+- Each person gets a unique **invite link** (`/?invite=TOKEN`) — distribute via your own email/chat, no mail server required
+- Opening a link locks the assessment to that person's email and organization, and resumes their in-progress assessment
+- Optional **roster enforcement** per org: only enrolled emails may start an assessment
+- Status auto-updates as people start and complete; export the roster + links as CSV
+
+### Training & Work Plans (from assessment results)
+- **Per-person training** — each assessor's report includes a "Training Plan" tab mapping their weakest controls to training topics, objectives, and resources
+- **Org-wide work plan** — aggregates every completed assessment into a prioritized roadmap phased as Immediate / 30 days / 90 days / Long-term (frequency × severity), plus an organizational training focus, exportable to PDF
+- Training content comes from a built-in catalog that admins can override per control
 
 ### Multilingual (i18n)
 - English ships built-in; **new languages need no rebuild**

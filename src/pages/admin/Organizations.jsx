@@ -29,6 +29,7 @@ function OrgModal({ org, onClose, onSave }) {
     code: org?.code || '',
     industry: org?.industry || '',
     contact_email: org?.contact_email || '',
+    roster_enforced: org?.roster_enforced || false,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +56,7 @@ function OrgModal({ org, onClose, onSave }) {
         code: form.code.toUpperCase().trim(),
         industry: form.industry || null,
         contact_email: form.contact_email || null,
+        roster_enforced: !!form.roster_enforced,
       };
       if (org?.id) {
         const { error: err } = await updateOrganization(org.id, payload);
@@ -142,6 +144,21 @@ function OrgModal({ org, onClose, onSave }) {
               placeholder="contact@organization.com"
             />
           </div>
+
+          <label className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.roster_enforced}
+              onChange={e => setForm(f => ({ ...f, roster_enforced: e.target.checked }))}
+              className="mt-0.5"
+            />
+            <span className="text-sm">
+              <span className="font-medium text-gray-800">Require enrollment (roster)</span>
+              <span className="block text-xs text-gray-500 mt-0.5">
+                When on, only people you enroll can start an assessment for this organization — they must use their invite link or an enrolled email.
+              </span>
+            </span>
+          </label>
 
           {error && (
             <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">

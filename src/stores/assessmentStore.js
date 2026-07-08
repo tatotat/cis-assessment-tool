@@ -49,7 +49,7 @@ const useAssessmentStore = create(
       saveStatus: 'idle', // idle | saving | saved | error
 
       // Initialize or resume a session
-      async startSession(email, orgCode, isResume = false, resumeSessionId = null) {
+      async startSession(email, orgCode, isResume = false, resumeSessionId = null, inviteToken = null) {
         set({ loading: true, error: null });
         try {
           // Look up organization
@@ -98,10 +98,11 @@ const useAssessmentStore = create(
               session_id: sessionId,
               organization_id: org.id,
               assessor_email: email.toLowerCase(),
+              invite_token: inviteToken || null,
               status: 'screening',
             });
             if (createError || !assessment) {
-              set({ loading: false, error: 'Failed to create assessment. Please try again.' });
+              set({ loading: false, error: createError?.message || 'Failed to create assessment. Please try again.' });
               return false;
             }
             set({

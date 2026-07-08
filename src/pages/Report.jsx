@@ -16,6 +16,7 @@ import { getSettings } from '../lib/settings';
 import RiskGauge from '../components/report/RiskGauge';
 import ControlScores from '../components/report/ControlScores';
 import RecommendationsPanel from '../components/report/RecommendationsPanel';
+import TrainingPanel from '../components/report/TrainingPanel';
 import clsx from 'clsx';
 
 function SafeguardStatusList({ safeguards, responses, ig, getComplianceStatus, STATUS_META, filter, search }) {
@@ -592,6 +593,7 @@ export default function Report() {
     { id: 'controls', label: 'Control Scores' },
     { id: 'actions', label: `Immediate Actions (${immediateActions.length})` },
     { id: 'recommendations', label: `Recommendations (${recommendations.length})` },
+    { id: 'training', label: 'Training Plan' },
     { id: 'safeguards', label: `Safeguard Status (${scoredResponses.length})` },
   ];
 
@@ -832,6 +834,11 @@ export default function Report() {
               </p>
               <RecommendationsPanel responses={scoredResponses} igLevel={ig} showHighOnly={false} />
             </div>
+          )}
+
+          {/* Training Plan tab */}
+          {activeTab === 'training' && (
+            <TrainingPanel responses={scoredResponses} igLevel={ig} />
           )}
 
           {/* Safeguard Status tab */}

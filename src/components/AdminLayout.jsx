@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Shield, LayoutDashboard, Building2, ClipboardList,
-  LogOut, Menu, X, ChevronRight, Users, Settings, Languages
+  LogOut, Menu, X, ChevronRight, Users, Settings, Languages,
+  ListChecks, GraduationCap
 } from 'lucide-react';
 import { supabase, IS_DEMO_MODE } from '../lib/supabase';
 import useAssessmentStore from '../stores/assessmentStore';
@@ -12,6 +13,9 @@ const navItems = [
   { path: '/admin', labelKey: 'admin.dashboard', icon: LayoutDashboard, exact: true },
   { path: '/admin/organizations', labelKey: 'admin.organizations', icon: Building2 },
   { path: '/admin/assessments', labelKey: 'admin.assessments', icon: ClipboardList },
+  { path: '/admin/enrollment', labelKey: 'admin.enrollmentNav', icon: ListChecks },
+  { path: '/admin/workplan', labelKey: 'admin.workplanNav', icon: ClipboardList },
+  { path: '/admin/training', labelKey: 'admin.trainingNav', icon: GraduationCap },
   { path: '/admin/users', labelKey: 'admin.users', icon: Users },
   { path: '/admin/settings', labelKey: 'admin.settings', icon: Settings },
   { path: '/admin/languages', labelKey: 'admin.languages', icon: Languages },
