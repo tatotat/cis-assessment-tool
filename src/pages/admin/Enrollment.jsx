@@ -9,6 +9,7 @@ import {
   getAllOrganizations, getEnrollmentsByOrg, bulkCreateEnrollments,
   deleteEnrollment, regenerateEnrollmentToken,
 } from '../../lib/supabase';
+import { getSettings } from '../../lib/settings';
 import clsx from 'clsx';
 
 function StatusBadge({ status }) {
@@ -28,8 +29,11 @@ function StatusBadge({ status }) {
   );
 }
 
+// Invite links use the admin-configured public URL when set (deployments behind
+// a proxy or under a subpath), otherwise the current origin.
 function inviteLink(token) {
-  return `${window.location.origin}/?invite=${token}`;
+  const base = (getSettings().publicBaseUrl || window.location.origin).replace(/\/+$/, '');
+  return `${base}/?invite=${token}`;
 }
 
 export default function AdminEnrollment() {

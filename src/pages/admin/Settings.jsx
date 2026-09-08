@@ -4,8 +4,8 @@ import {
   Database, CheckCircle, XCircle, AlertTriangle, RefreshCw,
   Copy, Check, ExternalLink, AlignLeft, Mail, Globe, Users
 } from 'lucide-react';
-import { getSettings, saveSettings, applyPrimaryColor } from '../../lib/settings';
-import { IS_DEMO_MODE, testConnection, checkIsAdmin, claimFirstAdmin } from '../../lib/supabase';
+import { getSettings, saveSettings, applyPrimaryColor, syncSettingsFromServer } from '../../lib/settings';
+import { IS_DEMO_MODE, testConnection, checkIsAdmin, claimFirstAdmin, saveAppSettings } from '../../lib/supabase';
 
 // ── Supabase diagnostics panel ────────────────────────────────────────────────
 
@@ -216,20 +216,30 @@ export default function Settings() {
     contactEmail: '',
     contactUrl: '',
     guestOrgCode: '',
+    publicBaseUrl: '',
     disclaimer: '',
     requireDisclaimerAccept: false,
     disclaimerCheckboxLabel: 'I have read and agree to the terms of this assessment',
   });
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
   const [colorPreview, setColorPreview] = useState('');
 
   useEffect(() => {
+    // Cached copy first (instant), then the authoritative server document
     const stored = getSettings();
     if (Object.keys(stored).length > 0) {
       setSettings(s => ({ ...s, ...stored }));
       setColorPreview(stored.primaryColor || '');
     }
+    syncSettingsFromServer().then(server => {
+      if (server) {
+        setSettings(s => ({ ...s, ...server }));
+        setColorPreview(server.primaryColor || '');
+      }
+    });
   }, []);
 
   function handleChange(field, value) {
@@ -242,9 +252,17 @@ export default function Settings() {
     }
   }
 
-  function handleSave() {
+  async function handleSave() {
+    setSaving(true);
+    setSaveError('');
+    const { error } = await saveAppSettings(settings);
+    setSaving(false);
+    if (error) {
+      setSaveError(error.message || 'Failed to save settings to the server.');
+      return;
+    }
+    // Server is the source of truth; refresh the local cache from what we sent
     saveSettings(settings);
-    // Apply the color right now so it persists after save
     if (settings.primaryColor) applyPrimaryColor(settings.primaryColor);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -255,7 +273,7 @@ export default function Settings() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Branding & Settings</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Customize how the assessment tool appears to users. Settings are saved locally in this browser.
+          Customize how the assessment tool appears to users. Settings are shared — everyone using this deployment sees them.
         </p>
       </div>
 
@@ -454,6 +472,30 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Public URL (invite links) */}
+      <div className="card">
+        <div className="card-header flex items-center gap-2">
+          <Globe className="w-4 h-4 text-primary-600" />
+          <h2 className="font-semibold text-gray-800">Public URL</h2>
+        </div>
+        <div className="card-body space-y-4">
+          <div>
+            <label className="label">Public base URL (optional)</label>
+            <input
+              type="url"
+              value={settings.publicBaseUrl}
+              onChange={e => handleChange('publicBaseUrl', e.target.value.trim())}
+              placeholder={typeof window !== 'undefined' ? window.location.origin : 'https://assess.example.org'}
+              className="input-field font-mono"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Used to build enrollment invite links. Set this if the tool is served behind a proxy or at a
+              different public address than the one you are using now. Leave blank to use the current origin.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Disclaimer */}
       <div className="card">
         <div className="card-header flex items-center gap-2">
@@ -549,9 +591,10 @@ export default function Settings() {
       <div className="flex items-center gap-3">
         <button
           onClick={handleSave}
+          disabled={saving}
           className="btn-primary"
         >
-          <Save className="w-4 h-4" />
+          {saving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> : <Save className="w-4 h-4" />}
           Save Settings
         </button>
         {saved && (
@@ -560,12 +603,18 @@ export default function Settings() {
             Settings saved successfully
           </span>
         )}
+        {saveError && (
+          <span className="text-sm text-red-600 flex items-center gap-1">
+            <XCircle className="w-4 h-4" />
+            {saveError}
+          </span>
+        )}
       </div>
 
       <p className="text-xs text-gray-400">
-        Branding settings (color, logo, name, disclaimer) are saved in your browser's local storage.
-        They apply to anyone using this browser. For multi-admin consistency, each admin browser needs
-        to save their own copy. Color changes take effect immediately — no rebuild needed.
+        Settings are stored on the server and apply to every visitor of this deployment (assessors
+        and admins alike). Color changes take effect immediately — no rebuild needed.
+        {IS_DEMO_MODE && ' In demo mode they are kept in memory and reset on reload.'}
       </p>
     </div>
   );

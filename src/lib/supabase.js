@@ -64,6 +64,8 @@ const _db = {
   ],
   // Training catalog overrides (control_number -> entry). Empty = all defaults.
   training_overrides: {},
+  // Shared app settings document (branding, disclaimer, guest code…)
+  app_settings: {},
   users: [
     {
       id: 'demo-user-1',
@@ -511,6 +513,29 @@ export async function resetTrainingEntry(controlNumber) {
   }
   const { error } = await supabase.from('training_catalog').delete().eq('control_number', controlNumber);
   return { error };
+}
+
+// ─── App settings (shared, server-side) ─────────────────────────────────────────
+
+// Public read of the single shared settings document.
+export async function fetchAppSettings() {
+  if (IS_DEMO_MODE) return { data: { ..._db.app_settings }, error: null };
+  const { data, error } = await supabase.rpc('get_app_settings');
+  return { data: (data && typeof data === 'object') ? data : {}, error };
+}
+
+// Admin write (direct table access, admin RLS).
+export async function saveAppSettings(settings) {
+  if (IS_DEMO_MODE) {
+    _db.app_settings = { ...settings };
+    return { data: _db.app_settings, error: null };
+  }
+  const { data, error } = await supabase
+    .from('app_settings')
+    .upsert([{ id: 1, settings }], { onConflict: 'id' })
+    .select('settings')
+    .single();
+  return { data: data?.settings ?? null, error };
 }
 
 // ─── Auth helpers ──────────────────────────────────────────────────────────────

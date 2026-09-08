@@ -12,7 +12,7 @@ import {
 } from '../lib/calculations';
 import { SAFEGUARDS, CONTROL_NAMES } from '../lib/safeguards';
 import { getRecommendation } from '../lib/recommendations';
-import { getSettings } from '../lib/settings';
+import { useSettings } from '../lib/settings';
 import RiskGauge from '../components/report/RiskGauge';
 import ControlScores from '../components/report/ControlScores';
 import RecommendationsPanel from '../components/report/RecommendationsPanel';
@@ -198,7 +198,7 @@ export default function Report() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [statusSearch, setStatusSearch] = useState('');
 
-  const branding = useMemo(() => getSettings(), []);
+  const branding = useSettings();
 
   // Map risk level to compliance status label
   function getComplianceStatus(riskScore, igLevel) {

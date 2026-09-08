@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Shield, ChevronRight, LayoutDashboard, Mail, Globe, Scale } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
-import { getSettings } from '../lib/settings';
+import { useSettings } from '../lib/settings';
 import LanguageSwitcher from './LanguageSwitcher';
 import LicenseModal from './LicenseModal';
 
@@ -12,7 +12,7 @@ export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { status, sessionId, reset } = useAssessmentStore();
-  const settings = useMemo(() => getSettings(), []);
+  const settings = useSettings();
   const [licenseOpen, setLicenseOpen] = useState(false);
 
   const steps = [

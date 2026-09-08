@@ -1,4 +1,15 @@
+import { useState, useEffect } from 'react';
+import { fetchAppSettings } from './supabase';
+
+/**
+ * Settings live in a single shared server document (app_settings table,
+ * see fetchAppSettings/saveAppSettings in supabase.js). localStorage is only
+ * a cache so the first paint is branded before the network round-trip, and
+ * the demo-mode fallback. `useSettings()` re-renders consumers when the
+ * cache is refreshed from the server or saved by an admin.
+ */
 const SETTINGS_KEY = 'cis_tool_branding';
+const SETTINGS_EVENT = 'cis-settings-updated';
 
 export function getSettings() {
   try {
@@ -8,8 +19,36 @@ export function getSettings() {
   }
 }
 
+// Write the local cache and notify useSettings() subscribers.
 export function saveSettings(settings) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch {}
+  window.dispatchEvent(new Event(SETTINGS_EVENT));
+}
+
+// Pull the shared document from the server into the cache. Returns the
+// settings object, or null if nothing came back (network error / demo empty).
+export async function syncSettingsFromServer() {
+  try {
+    const { data, error } = await fetchAppSettings();
+    if (error || !data || typeof data !== 'object') return null;
+    if (Object.keys(data).length === 0) return null;
+    saveSettings(data);
+    if (data.primaryColor) applyPrimaryColor(data.primaryColor);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// React hook: current settings, updated whenever the cache changes.
+export function useSettings() {
+  const [settings, setSettings] = useState(() => getSettings());
+  useEffect(() => {
+    const onChange = () => setSettings(getSettings());
+    window.addEventListener(SETTINGS_EVENT, onChange);
+    return () => window.removeEventListener(SETTINGS_EVENT, onChange);
+  }, []);
+  return settings;
 }
 
 // ── Primary color runtime theming ─────────────────────────────────────────────

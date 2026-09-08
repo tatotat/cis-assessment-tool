@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Shield, Mail, Hash, ArrowRight, RefreshCw, AlertCircle, CheckCircle, Ticket } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useAssessmentStore from '../stores/assessmentStore';
-import { getSettings } from '../lib/settings';
+import { useSettings } from '../lib/settings';
 import { getEnrollmentByToken } from '../lib/supabase';
 import clsx from 'clsx';
 
@@ -27,11 +27,7 @@ export default function Home() {
   const [inviteError, setInviteError] = useState(''); // invalid/expired token message
   const [inviteLoading, setInviteLoading] = useState(!!inviteToken);
 
-  const [settings, setSettings] = useState({});
-
-  useEffect(() => {
-    setSettings(getSettings());
-  }, []);
+  const settings = useSettings();
 
   // Resolve an invite token (?invite=…) into a locked enrollment
   useEffect(() => {

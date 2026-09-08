@@ -18,10 +18,12 @@ import AdminTraining from './pages/admin/Training';
 import AdminWorkPlan from './pages/admin/WorkPlan';
 import { supabase, IS_DEMO_MODE, checkIsAdmin } from './lib/supabase';
 import useAssessmentStore from './stores/assessmentStore';
-import { applyStoredBranding } from './lib/settings';
+import { applyStoredBranding, syncSettingsFromServer } from './lib/settings';
 
-// Apply stored primary color immediately on module load (before first paint)
+// Apply cached primary color immediately on module load (before first paint),
+// then refresh the cache from the shared server settings document.
 applyStoredBranding();
+syncSettingsFromServer();
 
 function ProtectedAdminRoute({ children }) {
   const [session, setSession] = useState(undefined);

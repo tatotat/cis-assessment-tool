@@ -591,6 +591,40 @@ create policy "Admins update locales" on storage.objects
 create policy "Admins delete locales" on storage.objects
   for delete using (bucket_id = 'locales' and public.is_admin());
 
+-- ─── App settings — one shared document (branding, disclaimer, guest code…) ──
+-- Admin-write via RLS; anonymous read via get_app_settings() RPC.
+
+create table public.app_settings (
+  id int primary key check (id = 1),
+  settings jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now()
+);
+
+insert into public.app_settings (id, settings) values (1, '{}'::jsonb);
+
+alter table public.app_settings enable row level security;
+
+create policy "Admins manage app_settings" on public.app_settings
+  for all
+  using (public.is_admin())
+  with check (public.is_admin());
+
+create trigger handle_app_settings_updated_at
+  before update on public.app_settings
+  for each row execute procedure public.handle_updated_at();
+
+create or replace function public.get_app_settings()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce((select settings from public.app_settings where id = 1), '{}'::jsonb);
+$$;
+
+grant execute on function public.get_app_settings() to anon, authenticated;
+
 -- Seed a demo organization
 insert into public.organizations (name, code, industry, contact_email)
 values ('Demo Organization', 'DEMO001', 'Technology', 'demo@example.com');
