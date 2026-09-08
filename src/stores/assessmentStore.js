@@ -128,6 +128,45 @@ const useAssessmentStore = create(
         }
       },
 
+      // Load an existing session by id without an org code (used by the admin
+      // "View Report" flow — the assessment carries its organization). Returns
+      // true on success; on failure the store is left untouched.
+      async loadSession(sessionId) {
+        if (!sessionId) return false;
+        set({ loading: true, error: null });
+        try {
+          const { data: assessment, error } = await getAssessmentBySessionId(sessionId);
+          if (error || !assessment) {
+            set({ loading: false, error: 'Session not found.' });
+            return false;
+          }
+          const { data: existingResponses } = await getResponsesBySession(sessionId);
+          const responsesMap = {};
+          (existingResponses || []).forEach(r => { responsesMap[r.safeguard_id] = r; });
+          const ig = assessment.implementation_group || 1;
+          set({
+            sessionId: assessment.session_id,
+            assessmentId: assessment.id,
+            organization: assessment.organizations || null,
+            assessorEmail: assessment.assessor_email,
+            assessorName: assessment.assessor_name || '',
+            screeningAnswers: assessment.ig_screening_answers || [],
+            implementationGroup: ig,
+            igScore: assessment.ig_screening_score || null,
+            safeguards: getSafeguardsForIG(ig),
+            currentIndex: assessment.current_safeguard_index || 0,
+            responses: responsesMap,
+            status: assessment.status || 'in_progress',
+            loading: false,
+            error: null,
+          });
+          return true;
+        } catch (err) {
+          set({ loading: false, error: err.message || 'Failed to load session.' });
+          return false;
+        }
+      },
+
       // Complete screening and set IG
       async completeScreening(answers, name) {
         const ig = determineIG(answers);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Download, RefreshCw, AlertTriangle, CheckCircle, AlertCircle,
   TrendingDown, Shield, Building2, Calendar, User, Hash,
@@ -186,10 +186,11 @@ function StatCard({ icon: Icon, label, value, color = 'text-gray-800', bg = 'bg-
 
 export default function Report() {
   const navigate = useNavigate();
+  const { sessionId: routeSessionId } = useParams();
   const {
     sessionId, organization, assessorEmail, assessorName,
     implementationGroup, responses, safeguards, screeningAnswers,
-    igScore, status, reset
+    igScore, status, reset, loadSession, loading
   } = useAssessmentStore();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -218,9 +219,25 @@ export default function Report() {
     'not-assessed':     { label: 'Not Assessed',            color: 'bg-gray-100 text-gray-600 border-gray-300',    dot: 'bg-gray-400',   description: 'This safeguard was not scored during the assessment.' },
   };
 
+  // /report/:sessionId (admin "View Report"): load that session into the store
+  // if it isn't already the active one. Plain /report requires an active session.
   useEffect(() => {
+    if (routeSessionId) {
+      if (routeSessionId !== sessionId) {
+        loadSession(routeSessionId).then(ok => { if (!ok) navigate('/admin/assessments'); });
+      }
+      return;
+    }
     if (!sessionId) navigate('/');
-  }, [sessionId]);
+  }, [routeSessionId, sessionId]);
+
+  if (routeSessionId && routeSessionId !== sessionId) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+      </div>
+    );
+  }
 
   const ig = implementationGroup || 1;
   const allResponses = Object.values(responses);

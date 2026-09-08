@@ -75,7 +75,7 @@ function ProtectedAdminRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         {/* Public assessment flow */}
         <Route path="/" element={<Layout />}>
@@ -83,6 +83,7 @@ export default function App() {
           <Route path="screening" element={<Screening />} />
           <Route path="assessment" element={<Assessment />} />
           <Route path="report" element={<Report />} />
+          <Route path="report/:sessionId" element={<Report />} />
         </Route>
 
         {/* Admin login (no layout) */}

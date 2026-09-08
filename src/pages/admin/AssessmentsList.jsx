@@ -65,10 +65,7 @@ export default function AssessmentsList() {
   }
 
   function handleViewReport(assessment) {
-    // Store the session id in localStorage so the report page can reload it
-    localStorage.setItem('cis_admin_view_session', assessment.session_id);
-    // Navigate to report page
-    navigate('/report');
+    navigate(`/report/${assessment.session_id}`);
   }
 
   const filtered = assessments
@@ -262,18 +259,30 @@ export default function AssessmentsList() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {a.status === 'completed' ? (
-                        <button
-                          onClick={() => handleViewReport(a)}
-                          title="Open the report page for this assessment. Use Export PDF on that page to download."
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200 rounded hover:bg-primary-100 transition-colors"
-                        >
-                          <FileText className="w-3 h-3" />
-                          View Report
-                        </button>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
+                      <div className="inline-flex items-center gap-1">
+                        {a.status === 'completed' ? (
+                          <button
+                            onClick={() => handleViewReport(a)}
+                            title="Open the report page for this assessment. Use Export PDF on that page to download."
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200 rounded hover:bg-primary-100 transition-colors"
+                          >
+                            <FileText className="w-3 h-3" />
+                            View Report
+                          </button>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
+                        {a.organization_id && (
+                          <button
+                            onClick={() => navigate(`/admin/workplan?org=${a.organization_id}`)}
+                            title="Open the aggregated work plan for this organization"
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+                          >
+                            <ClipboardList className="w-3 h-3" />
+                            Work plan
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
