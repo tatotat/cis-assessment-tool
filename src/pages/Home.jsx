@@ -186,7 +186,7 @@ export default function Home() {
                   className="mt-0.5"
                 />
                 <label htmlFor="disclaimerAccept" className="text-sm text-amber-800 cursor-pointer">
-                  {settings.disclaimerCheckboxLabel || 'I have read and agree to the terms of this assessment'}
+                  {settings.disclaimerCheckboxLabel || t('home.disclaimerDefaultLabel')}
                 </label>
               </div>
             )}

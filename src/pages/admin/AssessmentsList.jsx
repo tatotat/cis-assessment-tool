@@ -1,25 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  Search, Filter, ChevronDown, ExternalLink, ClipboardList,
-  CheckCircle, Clock, AlertTriangle, FileText
+  Search, ChevronDown, ClipboardList, CheckCircle, Clock, AlertTriangle, FileText
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getAllAssessments } from '../../lib/supabase';
 import { getORILevel } from '../../lib/calculations';
 import clsx from 'clsx';
 
 function StatusBadge({ status }) {
+  const { t } = useTranslation();
   const configs = {
-    completed: { label: 'Completed', class: 'badge-green', icon: CheckCircle },
-    in_progress: { label: 'In Progress', class: 'badge-blue', icon: Clock },
-    screening: { label: 'Screening', class: 'badge-yellow', icon: Clock },
+    completed: { class: 'badge-green', icon: CheckCircle },
+    in_progress: { class: 'badge-blue', icon: Clock },
+    screening: { class: 'badge-yellow', icon: Clock },
   };
-  const cfg = configs[status] || { label: status, class: 'badge-gray', icon: null };
+  const cfg = configs[status] || { class: 'badge-gray', icon: null };
   const Icon = cfg.icon;
   return (
     <span className={clsx('badge flex items-center gap-1', cfg.class)}>
       {Icon && <Icon className="w-3 h-3" />}
-      {cfg.label}
+      {t(`admin.assessmentStatus.${status}`, status)}
     </span>
   );
 }
@@ -41,6 +42,7 @@ function ORIBadge({ ori }) {
 }
 
 export default function AssessmentsList() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,9 +66,7 @@ export default function AssessmentsList() {
     else { setSortBy(field); setSortDir('desc'); }
   }
 
-  function handleViewReport(assessment) {
-    navigate(`/report/${assessment.session_id}`);
-  }
+  const fmtDate = d => new Date(d).toLocaleDateString(i18n.language);
 
   const filtered = assessments
     .filter(a => {
@@ -86,10 +86,7 @@ export default function AssessmentsList() {
     .sort((a, b) => {
       let av = a[sortBy];
       let bv = b[sortBy];
-      if (sortBy === 'organizational_risk_index') {
-        av = av ?? 999;
-        bv = bv ?? 999;
-      }
+      if (sortBy === 'organizational_risk_index') { av = av ?? 999; bv = bv ?? 999; }
       if (av === null || av === undefined) return 1;
       if (bv === null || bv === undefined) return -1;
       if (typeof av === 'string') av = av.toLowerCase();
@@ -103,10 +100,8 @@ export default function AssessmentsList() {
     return (
       <button
         onClick={() => toggleSort(field)}
-        className={clsx(
-          'flex items-center gap-1 font-semibold transition-colors text-xs uppercase',
-          isActive ? 'text-primary-700' : 'text-gray-500 hover:text-gray-700'
-        )}
+        className={clsx('flex items-center gap-1 font-semibold transition-colors text-xs uppercase',
+          isActive ? 'text-primary-700' : 'text-gray-500 hover:text-gray-700')}
       >
         {label}
         <ChevronDown className={clsx('w-3 h-3 transition-transform', isActive && sortDir === 'asc' && 'rotate-180')} />
@@ -129,20 +124,21 @@ export default function AssessmentsList() {
     );
   }
 
+  const noFilters = !search && filterStatus === 'all' && filterIG === 'all';
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Assessments</h1>
-        <p className="text-sm text-gray-500 mt-1">{assessments.length} total assessments</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('admin.assessments')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{t('admin.assessmentsPage.total', { count: assessments.length })}</p>
       </div>
 
-      {/* Quick stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: stats.total, icon: ClipboardList, color: 'text-gray-700' },
-          { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-green-700' },
-          { label: 'In Progress', value: stats.inProgress, icon: Clock, color: 'text-blue-700' },
-          { label: 'High ORI (≥50)', value: stats.highRisk, icon: AlertTriangle, color: 'text-red-700' },
+          { label: t('admin.assessmentsPage.statTotal'), value: stats.total, icon: ClipboardList, color: 'text-gray-700' },
+          { label: t('admin.assessmentStatus.completed'), value: stats.completed, icon: CheckCircle, color: 'text-green-700' },
+          { label: t('admin.assessmentStatus.in_progress'), value: stats.inProgress, icon: Clock, color: 'text-blue-700' },
+          { label: t('admin.assessmentsPage.highOri'), value: stats.highRisk, icon: AlertTriangle, color: 'text-red-700' },
         ].map(s => {
           const Icon = s.icon;
           return (
@@ -157,66 +153,50 @@ export default function AssessmentsList() {
         })}
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by org, email, session..."
-            className="input-field pl-9"
-          />
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={t('admin.assessmentsPage.searchPlaceholder')} className="input-field pl-9" />
         </div>
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          className="input-field w-auto"
-        >
-          <option value="all">All Status</option>
-          <option value="completed">Completed</option>
-          <option value="in_progress">In Progress</option>
-          <option value="screening">Screening</option>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input-field w-auto">
+          <option value="all">{t('admin.assessmentsPage.allStatus')}</option>
+          <option value="completed">{t('admin.assessmentStatus.completed')}</option>
+          <option value="in_progress">{t('admin.assessmentStatus.in_progress')}</option>
+          <option value="screening">{t('admin.assessmentStatus.screening')}</option>
         </select>
-        <select
-          value={filterIG}
-          onChange={e => setFilterIG(e.target.value)}
-          className="input-field w-auto"
-        >
-          <option value="all">All IGs</option>
+        <select value={filterIG} onChange={e => setFilterIG(e.target.value)} className="input-field w-auto">
+          <option value="all">{t('admin.assessmentsPage.allIgs')}</option>
           <option value="1">IG1</option>
           <option value="2">IG2</option>
           <option value="3">IG3</option>
         </select>
       </div>
 
-      {/* Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="px-4 py-3 text-left"><SortHeader field="organizations" label="Organization" /></th>
-                <th className="px-4 py-3 text-left"><SortHeader field="assessor_email" label="Assessor" /></th>
+                <th className="px-4 py-3 text-left"><SortHeader field="organizations" label={t('admin.cols.organization')} /></th>
+                <th className="px-4 py-3 text-left"><SortHeader field="assessor_email" label={t('admin.cols.assessor')} /></th>
                 <th className="px-4 py-3 text-center">IG</th>
                 <th className="px-4 py-3 text-center"><SortHeader field="organizational_risk_index" label="ORI" /></th>
-                <th className="px-4 py-3 text-center"><SortHeader field="status" label="Status" /></th>
-                <th className="px-4 py-3 text-center">Progress</th>
-                <th className="px-4 py-3 text-left"><SortHeader field="created_at" label="Created" /></th>
-                <th className="px-4 py-3 text-center">Session</th>
-                <th className="px-4 py-3 text-center">Actions</th>
+                <th className="px-4 py-3 text-center"><SortHeader field="status" label={t('admin.cols.status')} /></th>
+                <th className="px-4 py-3 text-center">{t('admin.cols.progress')}</th>
+                <th className="px-4 py-3 text-left"><SortHeader field="created_at" label={t('admin.cols.created')} /></th>
+                <th className="px-4 py-3 text-center">{t('admin.cols.session')}</th>
+                <th className="px-4 py-3 text-center">{t('admin.cols.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map(a => {
                 const progress = a.total_safeguards
-                  ? Math.round(((a.completed_safeguards || 0) / a.total_safeguards) * 100)
-                  : 0;
+                  ? Math.round(((a.completed_safeguards || 0) / a.total_safeguards) * 100) : 0;
                 return (
                   <tr key={a.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-800">{a.organizations?.name || 'Unknown'}</div>
+                      <div className="font-medium text-gray-800">{a.organizations?.name || t('admin.unknownOrg')}</div>
                       <div className="text-xs text-gray-400 font-mono">{a.organizations?.code}</div>
                     </td>
                     <td className="px-4 py-3">
@@ -224,50 +204,37 @@ export default function AssessmentsList() {
                       {a.assessor_name && <div className="text-gray-400 text-xs">{a.assessor_name}</div>}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {a.implementation_group && (
-                        <span className="badge badge-blue">IG{a.implementation_group}</span>
-                      )}
+                      {a.implementation_group && <span className="badge badge-blue">IG{a.implementation_group}</span>}
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <ORIBadge ori={a.organizational_risk_index} />
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <StatusBadge status={a.status} />
-                    </td>
+                    <td className="px-4 py-3 text-center"><ORIBadge ori={a.organizational_risk_index} /></td>
+                    <td className="px-4 py-3 text-center"><StatusBadge status={a.status} /></td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center gap-2 justify-center">
                         <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className="h-1.5 bg-primary-500 rounded-full"
-                            style={{ width: `${progress}%` }}
-                          />
+                          <div className="h-1.5 bg-primary-500 rounded-full" style={{ width: `${progress}%` }} />
                         </div>
                         <span className="text-xs text-gray-500 w-8">{progress}%</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">
-                      <div>{new Date(a.created_at).toLocaleDateString()}</div>
+                      <div>{fmtDate(a.created_at)}</div>
                       {a.completed_at && (
-                        <div className="text-green-600">
-                          Done: {new Date(a.completed_at).toLocaleDateString()}
-                        </div>
+                        <div className="text-green-600">{t('admin.assessmentsPage.done', { date: fmtDate(a.completed_at) })}</div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className="font-mono text-xs text-gray-400">
-                        {a.session_id?.slice(0, 8)}...
-                      </span>
+                      <span className="font-mono text-xs text-gray-400">{a.session_id?.slice(0, 8)}...</span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="inline-flex items-center gap-1">
                         {a.status === 'completed' ? (
                           <button
-                            onClick={() => handleViewReport(a)}
-                            title="Open the report page for this assessment. Use Export PDF on that page to download."
+                            onClick={() => navigate(`/report/${a.session_id}`)}
+                            title={t('admin.assessmentsPage.viewReportTitle')}
                             className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-primary-50 text-primary-700 border border-primary-200 rounded hover:bg-primary-100 transition-colors"
                           >
                             <FileText className="w-3 h-3" />
-                            View Report
+                            {t('admin.assessmentsPage.viewReport')}
                           </button>
                         ) : (
                           <span className="text-xs text-gray-400">—</span>
@@ -275,11 +242,11 @@ export default function AssessmentsList() {
                         {a.organization_id && (
                           <button
                             onClick={() => navigate(`/admin/workplan?org=${a.organization_id}`)}
-                            title="Open the aggregated work plan for this organization"
+                            title={t('admin.assessmentsPage.workPlanTitle')}
                             className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
                           >
                             <ClipboardList className="w-3 h-3" />
-                            Work plan
+                            {t('admin.assessmentsPage.workPlan')}
                           </button>
                         )}
                       </div>
@@ -291,9 +258,7 @@ export default function AssessmentsList() {
                 <tr>
                   <td colSpan={9} className="px-4 py-10 text-center text-gray-400">
                     <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                    {search || filterStatus !== 'all' || filterIG !== 'all'
-                      ? 'No assessments match your filters.'
-                      : 'No assessments yet.'}
+                    {noFilters ? t('admin.assessmentsPage.empty') : t('admin.assessmentsPage.noMatch')}
                   </td>
                 </tr>
               )}
@@ -302,8 +267,8 @@ export default function AssessmentsList() {
         </div>
         {filtered.length > 0 && (
           <div className="px-4 py-3 border-t bg-gray-50 text-xs text-gray-500">
-            Showing {filtered.length} of {assessments.length} assessments
-            {' '}— Click "View Report" on completed assessments to open the full report and export PDF.
+            {t('admin.assessmentsPage.showing', { shown: filtered.length, total: assessments.length })}
+            {' '}— {t('admin.assessmentsPage.showingHint')}
           </div>
         )}
       </div>

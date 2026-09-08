@@ -63,7 +63,8 @@
       "hint": "Your email and organization are set from your invitation. Continue to begin.",
       "resumeHint": "Welcome back — continue your assessment where you left off.",
       "invalid": "This invitation link is invalid or has been revoked. You can still start an assessment using your organization code below."
-    }
+    },
+    "disclaimerDefaultLabel": "I have read and agree to the terms of this assessment"
   },
   "screening": {
     "title": "Implementation Group Screening",
@@ -272,6 +273,172 @@
         "serious": "Score {{score}}/25 — Serious risk. An incident could cause major organizational disruption.",
         "catastrophic": "Score {{score}}/25 — Catastrophic risk level. An incident here could threaten the organization's viability."
       }
+    },
+    "maturity": {
+      "1": {
+        "label": "Not in place",
+        "description": "We don't have this practice at all, or it's very inconsistent"
+      },
+      "2": {
+        "label": "Partially done",
+        "description": "We do this for some systems or in some areas, but not everywhere"
+      },
+      "3": {
+        "label": "Fully in place",
+        "description": "We consistently do this across all our systems and people"
+      },
+      "4": {
+        "label": "Tested & verified",
+        "description": "We regularly check that this is working correctly and fix issues when found"
+      },
+      "5": {
+        "label": "Automated & assured",
+        "description": "We have systems that automatically enforce and verify this continuously"
+      },
+      "scorePrefix": "Score: {{score}}"
+    },
+    "impacts": {
+      "question": "If this area were compromised, how badly would it affect us?",
+      "dims": {
+        "mission": "Effect on our organization's ability to operate",
+        "operational": "Effect on our day-to-day operations and goals",
+        "obligations": "Effect on people outside our organization (customers, public, partners)",
+        "financial": "Financial impact to our organization"
+      },
+      "ig1": {
+        "mission": {
+          "1": {
+            "label": "Minor inconvenience",
+            "description": "We'd continue operating — minor inconvenience at most"
+          },
+          "2": {
+            "label": "Significant recovery needed",
+            "description": "We'd need significant time and money to recover, but we would"
+          },
+          "3": {
+            "label": "Could destroy us",
+            "description": "This could permanently shut down or seriously destroy our organization"
+          }
+        },
+        "operational": {
+          "1": {
+            "label": "No disruption",
+            "description": "Day-to-day operations would continue normally"
+          },
+          "2": {
+            "label": "Significant disruption",
+            "description": "We'd struggle operationally and need to reorganize to recover"
+          },
+          "3": {
+            "label": "Cannot deliver services",
+            "description": "We wouldn't be able to deliver our services or products"
+          }
+        },
+        "obligations": {
+          "1": {
+            "label": "No external harm",
+            "description": "No one outside our organization would be harmed"
+          },
+          "2": {
+            "label": "Fixable harm",
+            "description": "Some people could be harmed, but it would be fixable"
+          },
+          "3": {
+            "label": "Serious irreversible harm",
+            "description": "People could be seriously or permanently harmed, and we couldn't undo it"
+          }
+        }
+      },
+      "ig23": {
+        "mission": {
+          "1": {
+            "label": "No real impact",
+            "description": "No real impact — business as usual"
+          },
+          "2": {
+            "label": "Minor setback",
+            "description": "Minor setback — we'd recover quickly within normal operations"
+          },
+          "3": {
+            "label": "Significant setback",
+            "description": "Significant setback — we'd need unplanned effort and expense to recover"
+          },
+          "4": {
+            "label": "Major blow",
+            "description": "Major blow — would take years and major investment to recover"
+          },
+          "5": {
+            "label": "Catastrophic",
+            "description": "Catastrophic — our organization could not survive this"
+          }
+        },
+        "operational": {
+          "1": {
+            "label": "No impact",
+            "description": "No impact on our goals or plans"
+          },
+          "2": {
+            "label": "Minor variance",
+            "description": "Minor variance — still on track overall"
+          },
+          "3": {
+            "label": "Significant deviation",
+            "description": "Significant deviation — recovery possible within this fiscal year"
+          },
+          "4": {
+            "label": "Major deviation",
+            "description": "Major deviation — recovery would take multiple years"
+          },
+          "5": {
+            "label": "Total failure",
+            "description": "Total failure of our operational plans"
+          }
+        },
+        "obligations": {
+          "1": {
+            "label": "No harm to others",
+            "description": "No harm to anyone outside our organization"
+          },
+          "2": {
+            "label": "Minor inconvenience",
+            "description": "Minor inconvenience to others — nothing that requires correction"
+          },
+          "3": {
+            "label": "Correctable harm",
+            "description": "One or a few people could be meaningfully harmed — but it could be corrected"
+          },
+          "4": {
+            "label": "Many harmed",
+            "description": "Many people harmed, or some people permanently affected"
+          },
+          "5": {
+            "label": "Irreparable harm",
+            "description": "Many people would be permanently and irreparably harmed"
+          }
+        },
+        "financial": {
+          "1": {
+            "label": "No financial impact",
+            "description": "No financial impact"
+          },
+          "2": {
+            "label": "Minor expense",
+            "description": "Minor unplanned expense — within our normal budget variance"
+          },
+          "3": {
+            "label": "Significant expense",
+            "description": "Significant expense — requires unplanned budget reallocation"
+          },
+          "4": {
+            "label": "Severe impact",
+            "description": "Severe financial impact — may require external funding or long-term recovery plan"
+          },
+          "5": {
+            "label": "Financial catastrophe",
+            "description": "Financial catastrophe — could threaten organizational viability"
+          }
+        }
+      }
     }
   },
   "report": {
@@ -280,22 +447,44 @@
     "newAssessment": "New Assessment",
     "tabs": {
       "executive": "Executive Summary",
-      "safeguards": "Safeguard Status",
-      "recommendations": "Recommendations"
+      "safeguards": "Safeguard Status ({{count}})",
+      "recommendations": "Recommendations ({{count}})",
+      "overview": "Overview",
+      "controls": "Control Scores",
+      "actions": "Immediate Actions ({{count}})",
+      "training": "Training Plan"
     },
     "status": {
       "compliant": "Compliant",
       "needsImprovement": "Needs Improvement",
       "nonCompliant": "Non-Compliant",
       "critical": "Critical",
-      "notAssessed": "Not Assessed"
+      "notAssessed": "Not Assessed",
+      "noMatch": "No safeguards match the current filter.",
+      "riskScoreLabel": "risk score",
+      "statusPrefix": "Status:",
+      "whatCovers": "What this covers:",
+      "whyMatters": "Why it matters:",
+      "riskExposure": "Risk exposure",
+      "implLevel": "Implementation level",
+      "incidentLikelihood": "Incident likelihood",
+      "missionImpact": "Mission impact",
+      "operationalImpact": "Operational impact",
+      "obligationsImpact": "Obligations impact",
+      "assessorNotes": "Assessor notes:",
+      "title": "Safeguard Status",
+      "desc": "Full compliance status for every safeguard assessed. Click any row to see details and what the score means for your organization.",
+      "searchPlaceholder": "Search safeguards...",
+      "allStatuses": "All statuses"
     },
     "ori": {
-      "low": "Low",
+      "low": "Low risk posture — organization demonstrates strong security controls.",
       "guarded": "Guarded",
-      "elevated": "Elevated",
+      "elevated": "Elevated risk — significant improvements required across multiple areas.",
       "high": "High",
-      "critical": "Critical"
+      "critical": "Critical risk — immediate action required across most control areas.",
+      "moderate": "Moderate risk — some controls need improvement.",
+      "unknown": "Assessment incomplete."
     },
     "immediateActions": "Immediate Actions Required",
     "controlScores": "Control Scores",
@@ -309,6 +498,164 @@
       "intro": "Based on your weakest control areas, these training topics will have the greatest impact.",
       "none": "No training gaps identified — your assessed controls are within acceptable risk levels.",
       "exposure": "{{pct}}% exposure"
+    },
+    "riskLevel": {
+      "acceptable": "Acceptable",
+      "unacceptable": "Unacceptable",
+      "high": "High Risk"
+    },
+    "oriLevel": {
+      "low": "Low Risk",
+      "moderate": "Moderate Risk",
+      "elevated": "Elevated Risk",
+      "critical": "Critical Risk",
+      "unknown": "Unknown"
+    },
+    "statusMeta": {
+      "compliant": {
+        "label": "Compliant",
+        "description": "This safeguard is implemented at an acceptable level. Continue maintaining current practices."
+      },
+      "needs-improvement": {
+        "label": "Needs Improvement",
+        "description": "Risk is above acceptable levels. Improvement is needed within 90 days to reduce exposure."
+      },
+      "non-compliant": {
+        "label": "Non-Compliant",
+        "description": "This safeguard has high risk. Significant gaps exist that could be exploited. Address within 30 days."
+      },
+      "critical": {
+        "label": "Critical — Act Now",
+        "description": "Maximum risk score. This is the most severe finding. Immediate remediation is required — within 7 days."
+      },
+      "not-assessed": {
+        "label": "Not Assessed",
+        "description": "This safeguard was not scored during the assessment."
+      }
+    },
+    "pdfFailed": "Failed to generate PDF. Please try again.",
+    "header": {
+      "badge": "CIS RAM v2.1 Assessment Report",
+      "untitled": "Assessment Report",
+      "session": "Session: {{id}}..."
+    },
+    "buttons": {
+      "generating": "Generating...",
+      "exportPdf": "Export PDF",
+      "new": "New"
+    },
+    "oriTitle": "Organizational Risk Index",
+    "completeNote": "{{pct}}% of assessment complete",
+    "stats": {
+      "total": "Total Safeguards"
+    },
+    "banner": {
+      "title_one": "{{count}} safeguard requires immediate action",
+      "title_other": "{{count}} safeguards require immediate action",
+      "text": "These controls have the highest risk scores and should be prioritized for remediation."
+    },
+    "overview": {
+      "summary": "Assessment Summary",
+      "igLevel": "IG Level",
+      "igScore": "IG Score",
+      "completion": "Completion",
+      "aboutIg": "About IG{{ig}}",
+      "igText": {
+        "1": "Implementation Group 1 is designed for organizations with limited cybersecurity resources. It covers 56 essential safeguards using a 3-point impact scale and maturity-based expectancy scoring. Risk scores use VCDB incident data to auto-calculate expectancy from your maturity level.",
+        "2": "Implementation Group 2 covers 130 safeguards for organizations with moderate cybersecurity capabilities handling sensitive data. It uses a 5-point impact and expectancy scale, includes financial impact assessment, with a risk threshold of 9.",
+        "3": "Implementation Group 3 covers all 153 CIS Controls v8.1 safeguards for large organizations in high-risk environments. It includes comprehensive scoring with financial impact, and applies to critical infrastructure and highly regulated organizations."
+      },
+      "formulaTitle": "Risk Score Formula",
+      "formulaLhs": "Risk Score",
+      "formulaRhs": "Expectancy × MAX(Mission, Operational, Obligations)",
+      "formulaRhsFinancial": "Expectancy × MAX(Mission, Operational, Obligations, Financial)",
+      "formulaNote": "Expectancy is auto-calculated from VCDB index (by asset class) and maturity score"
+    },
+    "controls": {
+      "title": "Average Risk Score by CIS Control",
+      "control": "Control {{n}}",
+      "avgScore": "Avg Score:",
+      "safeguards": "Safeguards:",
+      "empty": "No scored responses available.",
+      "threshold": "Threshold"
+    },
+    "actions": {
+      "title": "Safeguards Requiring Immediate Action",
+      "desc": "These safeguards scored at the highest risk level and should be addressed within 30 days."
+    },
+    "recs": {
+      "title": "All Action-Required Safeguards",
+      "desc": "All safeguards with unacceptable or high risk scores, sorted by priority.",
+      "needsAttention": "Needs Attention",
+      "doNow": "Do this now",
+      "doWithin90": "Do this within 90 days",
+      "about": "What this is about",
+      "area": "Area",
+      "implementation": "Implementation",
+      "likelihood": "Likelihood",
+      "maxImpact": "Max Impact",
+      "riskScore": "Risk Score",
+      "longTerm": "Long-term best practice",
+      "yourNotes": "Your notes:",
+      "noneHigh": "No safeguards at the highest risk level — nothing needs immediate action.",
+      "none": "No safeguards need action — all assessed safeguards are within acceptable risk."
+    },
+    "footer": {
+      "sessionId": "Session ID:",
+      "hint": "Save this ID to resume your assessment later"
+    },
+    "pdf": {
+      "organization": "Organization",
+      "na": "N/A",
+      "criticalLabel": "CRITICAL",
+      "title": "CIS RAM v2.1",
+      "subtitle": "Risk Assessment Report",
+      "method": "CIS Controls Risk Assessment Method",
+      "assessmentDate": "Assessment Date: {{date}}",
+      "assessor": "Assessor: {{name}}",
+      "ig": "Implementation Group: IG{{ig}}",
+      "session": "Session ID: {{id}}",
+      "safeguardsAssessed": "Safeguards Assessed: {{scored}} / {{total}}",
+      "oriLabel": "Organizational Risk Index",
+      "oriRange": "ORI Range: 0 (best) to 100 (worst)",
+      "execSummary": "EXECUTIVE SUMMARY",
+      "summaryLine1": "This report presents the results of a CIS RAM v2.1 risk assessment conducted for {{org}} on {{date}}.",
+      "summaryLine2": "The assessment was performed against CIS Controls v8.1 Implementation Group {{ig}} (IG{{ig}}), covering {{scored}} of {{total}} applicable safeguards.",
+      "summaryLine3": "The Organizational Risk Index (ORI) is {{ori}} out of 100, indicating a {{level}} risk posture.",
+      "riskDistribution": "Risk Distribution",
+      "notScored": "Not Scored",
+      "total": "Total",
+      "controlScores": "CONTROL SCORES",
+      "immediateActions": "IMMEDIATE ACTIONS REQUIRED",
+      "recommendations": "RECOMMENDATIONS",
+      "doNow": "Do now",
+      "doWithin90": "Do within 90 days",
+      "riskTag": "Risk: {{score}}, {{level}}",
+      "safeguardStatus": "SAFEGUARD STATUS — FULL ASSESSMENT RESULTS",
+      "pageFooter": "Page {{page}} of {{pages}} | CIS RAM v2.1 Assessment Report | {{org}} | {{date}}",
+      "filenamePrefix": "CIS-RAM-Report",
+      "head": {
+        "riskLevel": "Risk Level",
+        "count": "Count",
+        "percentage": "Percentage",
+        "control": "Control",
+        "name": "Name",
+        "avgScore": "Avg Score",
+        "maxScore": "Max Score",
+        "safeguards": "Safeguards",
+        "level": "Level",
+        "safeguard": "Safeguard",
+        "title": "Title",
+        "assetClass": "Asset Class",
+        "riskScore": "Risk Score",
+        "expectancy": "Expectancy",
+        "maxImpact": "Max Impact",
+        "id": "ID",
+        "asset": "Asset",
+        "score": "Score",
+        "exposure": "Exposure",
+        "status": "Status"
+      }
     }
   },
   "admin": {
@@ -393,7 +740,236 @@
         "thirty": "Within 30 days",
         "ninety": "Within 90 days",
         "longterm": "Long-term / best practice"
+      },
+      "pdf": {
+        "safeguard": "Safeguard",
+        "title": "Title",
+        "affected": "Affected",
+        "action": "Action",
+        "control": "Control",
+        "exposure": "Exposure",
+        "training": "Recommended training",
+        "failed": "Failed to generate PDF."
       }
+    },
+    "assessmentStatus": {
+      "completed": "Completed",
+      "in_progress": "In Progress",
+      "screening": "Screening"
+    },
+    "cols": {
+      "organization": "Organization",
+      "assessor": "Assessor",
+      "status": "Status",
+      "progress": "Progress",
+      "date": "Date",
+      "created": "Created",
+      "session": "Session",
+      "actions": "Actions",
+      "code": "Code",
+      "industry": "Industry",
+      "contact": "Contact"
+    },
+    "unknownOrg": "Unknown",
+    "cancel": "Cancel",
+    "confirm": "Confirm?",
+    "yes": "Yes",
+    "no": "No",
+    "saving": "Saving...",
+    "dashboardPage": {
+      "title": "Dashboard",
+      "subtitle": "CIS RAM v2.1 Assessment Overview",
+      "totalAssessments": "Total Assessments",
+      "inProgressSub": "{{count}} in progress",
+      "avgOri": "Avg ORI",
+      "lowerIsBetter": "Lower is better",
+      "recent": "Recent Assessments",
+      "viewAll": "View all",
+      "empty": "No assessments yet.",
+      "manageOrgs": "Manage Organizations",
+      "manageOrgsDesc": "Add, edit, or remove organizations",
+      "viewAssessments": "View Assessments",
+      "viewAssessmentsDesc": "Browse and filter all assessments"
+    },
+    "login": {
+      "demoCredentials": "Demo credentials: admin@demo.com / demo1234",
+      "invalid": "Invalid email or password.",
+      "reauthFailed": "Could not re-authenticate. Check your credentials.",
+      "accessRequired": "Admin Access Required",
+      "notAdminYet": "{{email}} is not marked as admin yet.",
+      "option1": "Option 1 — Claim First Admin",
+      "option1Hint": "Works only if no admin has been set up yet.",
+      "claiming": "Claiming...",
+      "claim": "Claim Admin Access",
+      "option2": "Option 2 — Run SQL in Supabase",
+      "option2Hint": "Go to your Supabase project → SQL Editor and run:",
+      "copySql": "Copy SQL",
+      "thenLogin": "Then come back and log in again.",
+      "backToLogin": "Back to Login",
+      "subtitle": "CIS RAM v2.1 Assessment Tool",
+      "demoMode": "Demo Mode",
+      "demoModeText": "No Supabase credentials configured.",
+      "use": "Use",
+      "email": "Email Address",
+      "password": "Password",
+      "signingIn": "Signing in...",
+      "signIn": "Sign In",
+      "backToTool": "Back to Assessment Tool"
+    },
+    "assessmentsPage": {
+      "total": "{{count}} total assessments",
+      "statTotal": "Total",
+      "highOri": "High ORI (≥50)",
+      "searchPlaceholder": "Search by org, email, session...",
+      "allStatus": "All Status",
+      "allIgs": "All IGs",
+      "done": "Done: {{date}}",
+      "viewReportTitle": "Open the report page for this assessment. Use Export PDF on that page to download.",
+      "viewReport": "View Report",
+      "workPlanTitle": "Open the aggregated work plan for this organization",
+      "workPlan": "Work plan",
+      "empty": "No assessments yet.",
+      "noMatch": "No assessments match your filters.",
+      "showing": "Showing {{shown}} of {{total}} assessments",
+      "showingHint": "Click \"View Report\" on completed assessments to open the full report and export PDF."
+    },
+    "usersPage": {
+      "required": "Email and organization are required.",
+      "added": "User {{email}} has been added successfully.",
+      "count": "{{count}} users in the system",
+      "addUser": "Add User",
+      "addNewUser": "Add New User",
+      "email": "Email Address",
+      "selectOrg": "Select an organization...",
+      "role": "Role",
+      "roleAssessorLong": "Assessor (can complete assessments)",
+      "roleAdminLong": "Admin (can view all assessments and admin panel)",
+      "adding": "Adding...",
+      "searchPlaceholder": "Search by email or organization...",
+      "lastActive": "Last Active",
+      "noOrg": "No organization",
+      "roleAssessor": "Assessor",
+      "roleAdmin": "Admin",
+      "never": "Never",
+      "remove": "Remove user",
+      "noMatch": "No users match your search.",
+      "empty": "No users found. Add one above.",
+      "showing": "Showing {{shown}} of {{total}} users"
+    },
+    "orgsPage": {
+      "registered": "{{count}} organizations registered",
+      "newOrg": "New Organization",
+      "editOrg": "Edit Organization",
+      "searchPlaceholder": "Search by name, code, or industry...",
+      "nameLabel": "Organization Name",
+      "codeLabel": "Organization Code",
+      "autoGenerate": "Auto-generate code",
+      "codeHint": "4–20 alphanumeric characters, shared with assessors",
+      "selectIndustry": "Select industry...",
+      "contactEmail": "Contact Email",
+      "rosterLabel": "Require enrollment (roster)",
+      "rosterHint": "When on, only people you enroll can start an assessment for this organization — they must use their invite link or an enrolled email.",
+      "rosterBadge": "Roster enforced",
+      "update": "Update",
+      "create": "Create",
+      "copyCode": "Copy code",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this organization and all its assessments?",
+      "noMatch": "No organizations match your search.",
+      "empty": "No organizations yet. Create one to get started.",
+      "errors": {
+        "nameRequired": "Organization name is required.",
+        "codeRequired": "Organization code is required.",
+        "codeFormat": "Code must be 4–20 alphanumeric characters (no spaces).",
+        "saveFailed": "Failed to save. The organization code may already be in use."
+      }
+    },
+    "settingsPage": {
+      "title": "Branding & Settings",
+      "subtitle": "Customize how the assessment tool appears to users. Settings are shared — everyone using this deployment sees them.",
+      "diag": {
+        "title": "Supabase Connection & Admin Setup",
+        "mode": "Mode:",
+        "demo": "Demo / Offline",
+        "production": "Production (Supabase)",
+        "demoHint": "To connect, add",
+        "run": "Run Diagnostics",
+        "running": "Testing...",
+        "runHint": "Tests DB connection and checks if your account has admin privileges.",
+        "dbLabel": "Database:",
+        "connected": "Connected",
+        "failed": "Connection Failed",
+        "adminRole": "Admin Role:",
+        "granted": "Granted ✓",
+        "notSet": "Not Set",
+        "hasAdmin": "{{email}} has admin privileges.",
+        "noAdmin": "{{email}} does not have admin role. Operations like creating organizations will fail.",
+        "yourAccount": "Your account",
+        "claim": "Claim Admin Access (if first admin)",
+        "claiming": "Claiming...",
+        "orRun": "Or run this in",
+        "sqlEditor": "Supabase SQL Editor",
+        "copySql": "Copy SQL",
+        "schemaHintStrong": "Schema not applied yet?",
+        "schemaHint": "Run this file in your Supabase SQL Editor (Project → SQL Editor → New Query):"
+      },
+      "branding": {
+        "title": "Organization Branding",
+        "nameLabel": "Organization Display Name",
+        "namePlaceholder": "e.g. Acme Corp Security Assessment",
+        "nameHint": "Replaces \"CIS RAM v2.1\" as the tool name shown on the home page and header.",
+        "subtitleLabel": "Tool Subtitle",
+        "subtitleHint": "Shown below the tool name in the header. Default: \"Risk Assessment Tool\".",
+        "logoLabel": "Logo URL",
+        "logoHint": "If set, displays your logo instead of the shield icon on the home page and report.",
+        "colorLabel": "Primary Color",
+        "colorHint": "Changes buttons, sidebar, and accent colors across the tool. Preview updates live — click Save to persist.",
+        "livePreview": "Live preview — changes applied immediately"
+      },
+      "footer": {
+        "title": "Footer Text",
+        "leftLabel": "Footer Left Text",
+        "leftHint": "Displayed on the left side of the footer bar.",
+        "rightLabel": "Footer Right Text",
+        "rightHint": "Displayed on the right side of the footer bar."
+      },
+      "contact": {
+        "title": "Contact Information",
+        "emailLabel": "Contact Email",
+        "emailHint": "Shown as a clickable mailto: link in the footer. Leave blank to hide.",
+        "urlLabel": "Contact URL",
+        "urlHint": "Shown as a clickable link in the footer. Leave blank to hide."
+      },
+      "guest": {
+        "title": "Guest Access",
+        "label": "Guest Organization Code",
+        "hint": "When set, a \"Continue as Guest\" link appears on the home page. Guests are assigned to this organization code automatically. The org code must exist in your organizations list. Leave blank to disable guest access."
+      },
+      "publicUrl": {
+        "title": "Public URL",
+        "label": "Public base URL (optional)",
+        "hint": "Used to build enrollment invite links. Set this if the tool is served behind a proxy or at a different public address than the one you are using now. Leave blank to use the current origin."
+      },
+      "disclaimer": {
+        "title": "Disclaimer & Consent",
+        "textLabel": "Disclaimer Text",
+        "textPlaceholder": "Enter a disclaimer or terms statement to show above the assessment form. Leave blank to hide.",
+        "textHint": "Shown in a highlighted box above the start form on the home page.",
+        "requireLabel": "Require users to check a box before starting",
+        "requireHint": "If enabled, users must accept the disclaimer before they can submit the form.",
+        "checkboxLabel": "Checkbox Label"
+      },
+      "preview": {
+        "title": "Disclaimer Preview",
+        "show": "Show Preview",
+        "hide": "Hide Preview"
+      },
+      "save": "Save Settings",
+      "saved": "Settings saved successfully",
+      "saveFailed": "Failed to save settings to the server.",
+      "footnote": "Settings are stored on the server and apply to every visitor of this deployment (assessors and admins alike). Color changes take effect immediately — no rebuild needed.",
+      "footnoteDemo": "In demo mode they are kept in memory and reset on reload."
     }
   },
   "languages": {

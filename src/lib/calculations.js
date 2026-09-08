@@ -224,11 +224,4 @@ export function getORILevel(ori) {
   return 'critical';
 }
 
-export function getORIDescription(ori) {
-  const level = getORILevel(ori);
-  if (level === 'low') return 'Low risk posture — organization demonstrates strong security controls.';
-  if (level === 'moderate') return 'Moderate risk — some controls need improvement.';
-  if (level === 'elevated') return 'Elevated risk — significant improvements required across multiple areas.';
-  if (level === 'critical') return 'Critical risk — immediate action required across most control areas.';
-  return 'Assessment incomplete.';
-}
+// ORI level descriptions live in translations: t(`report.ori.${getORILevel(ori)}`)

@@ -356,7 +356,7 @@ export default function Assessment() {
                     <p className="text-xs text-gray-400 mt-0.5 italic">{currentSafeguard.title}</p>
                   )}
                   <p className="text-sm text-gray-500 mt-1">
-                    Control {currentSafeguard.control}: {CONTROL_NAMES[currentSafeguard.control]}
+                    {t('report.controls.control', { n: currentSafeguard.control })}: {CONTROL_NAMES[currentSafeguard.control]}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">

@@ -10,6 +10,8 @@ import {
 } from '../../lib/supabase';
 import { buildWorkPlan, PHASE_ORDER } from '../../lib/workplan';
 import { mergeCatalog } from '../../lib/trainingCatalog';
+import { useSettings } from '../../lib/settings';
+import { loadLogoDataUrl, drawLogo } from '../../lib/pdf/logo';
 import clsx from 'clsx';
 
 const PHASE_META = {
@@ -25,7 +27,7 @@ const COLOR_CLS = {
 };
 
 export default function AdminWorkPlan() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const orgId = searchParams.get('org') || '';
@@ -37,6 +39,8 @@ export default function AdminWorkPlan() {
   const [overrides, setOverrides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const branding = useSettings();
 
   useEffect(() => {
     getAllOrganizations().then(({ data }) => {
@@ -75,6 +79,7 @@ export default function AdminWorkPlan() {
 
   async function handleExport() {
     setExporting(true);
+    setExportError('');
     try {
       const { jsPDF } = await import('jspdf');
       const autoTable = (await import('jspdf-autotable')).default;
@@ -83,15 +88,16 @@ export default function AdminWorkPlan() {
 
       doc.setFillColor(13, 74, 74);
       doc.rect(0, 0, pageW, 30, 'F');
+      drawLogo(doc, await loadLogoDataUrl(branding.logoUrl), { pageW, top: 8 });
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18); doc.setFont('helvetica', 'bold');
-      doc.text('Organizational Work Plan', 15, 15);
+      doc.text(t('admin.workplan.title'), 15, 15);
       doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-      doc.text(`${org?.name || ''} — ${new Date().toLocaleDateString()}`, 15, 23);
+      doc.text(`${org?.name || ''} — ${new Date().toLocaleDateString(i18n.language)}`, 15, 23);
 
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(9);
-      doc.text(`Based on ${plan.stats.assessorCount} completed assessment(s), ${plan.stats.safeguardsAssessed} safeguards analyzed.`, 15, 40);
+      doc.text(`${t('admin.workplan.basedOn', { count: plan.stats.assessorCount })} · ${t('admin.workplan.safeguardsAnalyzed', { count: plan.stats.safeguardsAssessed })}`, 15, 40);
 
       let startY = 46;
       for (const phase of PHASE_ORDER) {
@@ -101,7 +107,7 @@ export default function AdminWorkPlan() {
         doc.text(t(PHASE_META[phase].labelKey), 15, startY);
         autoTable(doc, {
           startY: startY + 3,
-          head: [['Safeguard', 'Title', 'Affected', 'Action']],
+          head: [[t('admin.workplan.pdf.safeguard'), t('admin.workplan.pdf.title'), t('admin.workplan.pdf.affected'), t('admin.workplan.pdf.action')]],
           body: items.map(it => [it.safeguardId, it.title, `${it.affected}/${it.total}`, it.action]),
           headStyles: { fillColor: [13, 74, 74], textColor: 255 },
           styles: { fontSize: 7, cellWidth: 'wrap' },
@@ -116,10 +122,10 @@ export default function AdminWorkPlan() {
       if (trainingFocus.length) {
         if (startY > 240) { doc.addPage(); startY = 20; }
         doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-        doc.text('Training Focus', 15, startY);
+        doc.text(t('admin.workplan.trainingFocus'), 15, startY);
         autoTable(doc, {
           startY: startY + 3,
-          head: [['Control', 'Exposure', 'Recommended training']],
+          head: [[t('admin.workplan.pdf.control'), t('admin.workplan.pdf.exposure'), t('admin.workplan.pdf.training')]],
           body: trainingFocus.map(c => [
             `C${c.controlNumber}: ${c.name}`,
             `${c.exposure}%`,
@@ -134,8 +140,8 @@ export default function AdminWorkPlan() {
 
       doc.save(`WorkPlan-${org?.code || 'org'}-${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (err) {
-      console.error(err);
-      alert('Failed to generate PDF.');
+      console.error('Work plan PDF error:', err);
+      setExportError(t('admin.workplan.pdf.failed'));
     } finally {
       setExporting(false);
     }
@@ -168,6 +174,12 @@ export default function AdminWorkPlan() {
           )}
         </div>
       </div>
+
+      {exportError && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" /> {exportError}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" /></div>

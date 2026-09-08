@@ -3,11 +3,10 @@ import {
   Plus, Pencil, Trash2, X, Check, AlertCircle, Building2,
   Copy, RefreshCw, Search
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   getAllOrganizations, createOrganization, updateOrganization, deleteOrganization,
-  getAssessmentsByOrg
 } from '../../lib/supabase';
-import clsx from 'clsx';
 
 function generateCode(name) {
   const words = name.toUpperCase().replace(/[^A-Z0-9 ]/g, '').split(' ').filter(Boolean);
@@ -17,6 +16,7 @@ function generateCode(name) {
   return (words[0] || 'ORG').slice(0, 5).toUpperCase() + Math.floor(Math.random() * 900 + 100);
 }
 
+// Stored as-is in the DB, so kept as data rather than translated labels
 const INDUSTRIES = [
   'Technology', 'Healthcare', 'Finance & Banking', 'Government', 'Education',
   'Manufacturing', 'Retail', 'Energy & Utilities', 'Transportation', 'Legal',
@@ -24,6 +24,7 @@ const INDUSTRIES = [
 ];
 
 function OrgModal({ org, onClose, onSave }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: org?.name || '',
     code: org?.code || '',
@@ -35,18 +36,16 @@ function OrgModal({ org, onClose, onSave }) {
   const [error, setError] = useState('');
 
   function generateNewCode() {
-    if (form.name) {
-      setForm(f => ({ ...f, code: generateCode(f.name) }));
-    }
+    if (form.name) setForm(f => ({ ...f, code: generateCode(f.name) }));
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
-    if (!form.name.trim()) { setError('Organization name is required.'); return; }
-    if (!form.code.trim()) { setError('Organization code is required.'); return; }
+    if (!form.name.trim()) { setError(t('admin.orgsPage.errors.nameRequired')); return; }
+    if (!form.code.trim()) { setError(t('admin.orgsPage.errors.codeRequired')); return; }
     if (!/^[A-Z0-9]{4,20}$/.test(form.code.toUpperCase())) {
-      setError('Code must be 4–20 alphanumeric characters (no spaces).');
+      setError(t('admin.orgsPage.errors.codeFormat'));
       return;
     }
     setSaving(true);
@@ -58,105 +57,69 @@ function OrgModal({ org, onClose, onSave }) {
         contact_email: form.contact_email || null,
         roster_enforced: !!form.roster_enforced,
       };
-      if (org?.id) {
-        const { error: err } = await updateOrganization(org.id, payload);
-        if (err) throw err;
-      } else {
-        const { error: err } = await createOrganization(payload);
-        if (err) throw err;
-      }
+      const { error: err } = org?.id
+        ? await updateOrganization(org.id, payload)
+        : await createOrganization(payload);
+      if (err) throw err;
       onSave();
     } catch (err) {
-      setError(err.message || 'Failed to save. The organization code may already be in use.');
+      setError(err.message || t('admin.orgsPage.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-lg font-semibold text-gray-900">
-            {org?.id ? 'Edit Organization' : 'New Organization'}
+            {org?.id ? t('admin.orgsPage.editOrg') : t('admin.orgsPage.newOrg')}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600" aria-label={t('admin.cancel')}>
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div>
-            <label className="label">Organization Name *</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              className="input-field"
-              placeholder="Acme Corporation"
-              required
-            />
+            <label className="label">{t('admin.orgsPage.nameLabel')} *</label>
+            <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              className="input-field" placeholder="Acme Corporation" required />
           </div>
 
           <div>
-            <label className="label">Organization Code *</label>
+            <label className="label">{t('admin.orgsPage.codeLabel')} *</label>
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={form.code}
-                onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                className="input-field font-mono uppercase flex-1"
-                placeholder="ACME001"
-                maxLength={20}
-                required
-              />
-              <button
-                type="button"
-                onClick={generateNewCode}
-                title="Auto-generate code"
-                className="btn-secondary px-3 flex-shrink-0"
-              >
+              <input type="text" value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                className="input-field font-mono uppercase flex-1" placeholder="ACME001" maxLength={20} required />
+              <button type="button" onClick={generateNewCode} title={t('admin.orgsPage.autoGenerate')} className="btn-secondary px-3 flex-shrink-0">
                 <RefreshCw className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">4–20 alphanumeric characters, shared with assessors</p>
+            <p className="text-xs text-gray-500 mt-1">{t('admin.orgsPage.codeHint')}</p>
           </div>
 
           <div>
-            <label className="label">Industry</label>
-            <select
-              value={form.industry}
-              onChange={e => setForm(f => ({ ...f, industry: e.target.value }))}
-              className="input-field"
-            >
-              <option value="">Select industry...</option>
+            <label className="label">{t('admin.cols.industry')}</label>
+            <select value={form.industry} onChange={e => setForm(f => ({ ...f, industry: e.target.value }))} className="input-field">
+              <option value="">{t('admin.orgsPage.selectIndustry')}</option>
               {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
             </select>
           </div>
 
           <div>
-            <label className="label">Contact Email</label>
-            <input
-              type="email"
-              value={form.contact_email}
-              onChange={e => setForm(f => ({ ...f, contact_email: e.target.value }))}
-              className="input-field"
-              placeholder="contact@organization.com"
-            />
+            <label className="label">{t('admin.orgsPage.contactEmail')}</label>
+            <input type="email" value={form.contact_email} onChange={e => setForm(f => ({ ...f, contact_email: e.target.value }))}
+              className="input-field" placeholder="contact@organization.com" />
           </div>
 
           <label className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.roster_enforced}
-              onChange={e => setForm(f => ({ ...f, roster_enforced: e.target.checked }))}
-              className="mt-0.5"
-            />
+            <input type="checkbox" checked={form.roster_enforced}
+              onChange={e => setForm(f => ({ ...f, roster_enforced: e.target.checked }))} className="mt-0.5" />
             <span className="text-sm">
-              <span className="font-medium text-gray-800">Require enrollment (roster)</span>
-              <span className="block text-xs text-gray-500 mt-0.5">
-                When on, only people you enroll can start an assessment for this organization — they must use their invite link or an enrolled email.
-              </span>
+              <span className="font-medium text-gray-800">{t('admin.orgsPage.rosterLabel')}</span>
+              <span className="block text-xs text-gray-500 mt-0.5">{t('admin.orgsPage.rosterHint')}</span>
             </span>
           </label>
 
@@ -168,13 +131,11 @@ function OrgModal({ org, onClose, onSave }) {
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+            <button type="button" onClick={onClose} className="btn-secondary">{t('admin.cancel')}</button>
             <button type="submit" disabled={saving} className="btn-primary">
-              {saving ? (
-                <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> Saving...</>
-              ) : (
-                <><Check className="w-4 h-4" /> {org?.id ? 'Update' : 'Create'}</>
-              )}
+              {saving
+                ? <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" /> {t('admin.saving')}</>
+                : <><Check className="w-4 h-4" /> {org?.id ? t('admin.orgsPage.update') : t('admin.orgsPage.create')}</>}
             </button>
           </div>
         </form>
@@ -184,12 +145,14 @@ function OrgModal({ org, onClose, onSave }) {
 }
 
 export default function Organizations() {
+  const { t, i18n } = useTranslation();
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [modalOrg, setModalOrg] = useState(null); // null=closed, {}=new, org=edit
+  const [modalOrg, setModalOrg] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // org pending inline confirmation
   const [copiedCode, setCopiedCode] = useState(null);
 
   async function load() {
@@ -201,18 +164,11 @@ export default function Organizations() {
 
   useEffect(() => { load(); }, []);
 
-  function handleNew() {
-    setModalOrg({});
-    setModalOpen(true);
-  }
-
-  function handleEdit(org) {
-    setModalOrg(org);
-    setModalOpen(true);
-  }
+  function handleNew() { setModalOrg({}); setModalOpen(true); }
+  function handleEdit(org) { setModalOrg(org); setModalOpen(true); }
 
   async function handleDelete(org) {
-    if (!window.confirm(`Delete "${org.name}"? This will also delete all associated assessments.`)) return;
+    setConfirmDelete(null);
     setDeleting(org.id);
     await deleteOrganization(org.id);
     await load();
@@ -225,38 +181,30 @@ export default function Organizations() {
     setTimeout(() => setCopiedCode(null), 2000);
   }
 
+  const q = search.toLowerCase();
   const filtered = orgs.filter(o =>
-    o.name.toLowerCase().includes(search.toLowerCase()) ||
-    o.code.toLowerCase().includes(search.toLowerCase()) ||
-    (o.industry || '').toLowerCase().includes(search.toLowerCase())
+    o.name.toLowerCase().includes(q) || o.code.toLowerCase().includes(q) || (o.industry || '').toLowerCase().includes(q)
   );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Organizations</h1>
-          <p className="text-sm text-gray-500 mt-1">{orgs.length} organizations registered</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.organizations')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('admin.orgsPage.registered', { count: orgs.length })}</p>
         </div>
         <button onClick={handleNew} className="btn-primary">
           <Plus className="w-4 h-4" />
-          New Organization
+          {t('admin.orgsPage.newOrg')}
         </button>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, code, or industry..."
-          className="input-field pl-9"
-        />
+        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+          placeholder={t('admin.orgsPage.searchPlaceholder')} className="input-field pl-9" />
       </div>
 
-      {/* Table */}
       <div className="card overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-40">
@@ -267,12 +215,12 @@ export default function Organizations() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                  <th className="px-4 py-3 text-left">Organization</th>
-                  <th className="px-4 py-3 text-left">Code</th>
-                  <th className="px-4 py-3 text-left">Industry</th>
-                  <th className="px-4 py-3 text-left">Contact</th>
-                  <th className="px-4 py-3 text-left">Created</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 text-left">{t('admin.cols.organization')}</th>
+                  <th className="px-4 py-3 text-left">{t('admin.cols.code')}</th>
+                  <th className="px-4 py-3 text-left">{t('admin.cols.industry')}</th>
+                  <th className="px-4 py-3 text-left">{t('admin.cols.contact')}</th>
+                  <th className="px-4 py-3 text-left">{t('admin.cols.created')}</th>
+                  <th className="px-4 py-3 text-right">{t('admin.cols.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -283,52 +231,46 @@ export default function Organizations() {
                         <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs flex-shrink-0">
                           {org.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="font-medium text-gray-800">{org.name}</div>
+                        <div>
+                          <div className="font-medium text-gray-800">{org.name}</div>
+                          {org.roster_enforced && (
+                            <div className="text-xs text-amber-700">{t('admin.orgsPage.rosterBadge')}</div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <code className="font-mono bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold">
-                          {org.code}
-                        </code>
-                        <button
-                          onClick={() => copyCode(org.code)}
-                          className="text-gray-400 hover:text-gray-600 transition-colors"
-                          title="Copy code"
-                        >
-                          {copiedCode === org.code
-                            ? <Check className="w-3.5 h-3.5 text-green-500" />
-                            : <Copy className="w-3.5 h-3.5" />
-                          }
+                        <code className="font-mono bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-bold">{org.code}</code>
+                        <button onClick={() => copyCode(org.code)} className="text-gray-400 hover:text-gray-600 transition-colors" title={t('admin.orgsPage.copyCode')}>
+                          {copiedCode === org.code ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600 text-xs">{org.industry || '—'}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{org.contact_email || '—'}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">
-                      {new Date(org.created_at).toLocaleDateString()}
-                    </td>
+                    <td className="px-4 py-3 text-gray-400 text-xs">{new Date(org.created_at).toLocaleDateString(i18n.language)}</td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(org)}
-                          className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(org)}
-                          disabled={deleting === org.id}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                          title="Delete"
-                        >
-                          {deleting === org.id
-                            ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500" />
-                            : <Trash2 className="w-4 h-4" />
-                          }
-                        </button>
-                      </div>
+                      {confirmDelete === org.id ? (
+                        <div className="flex items-center justify-end gap-2 text-xs">
+                          <span className="text-red-600">{t('admin.orgsPage.deleteConfirm')}</span>
+                          <button onClick={() => handleDelete(org)} className="text-red-600 font-semibold hover:underline">{t('admin.yes')}</button>
+                          <button onClick={() => setConfirmDelete(null)} className="text-gray-500 hover:underline">{t('admin.no')}</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleEdit(org)} title={t('admin.orgsPage.edit')}
+                            className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setConfirmDelete(org.id)} disabled={deleting === org.id} title={t('admin.orgsPage.delete')}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50">
+                            {deleting === org.id
+                              ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500" />
+                              : <Trash2 className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -336,7 +278,7 @@ export default function Organizations() {
                   <tr>
                     <td colSpan={6} className="px-4 py-10 text-center text-gray-400">
                       <Building2 className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                      {search ? 'No organizations match your search.' : 'No organizations yet. Create one to get started.'}
+                      {search ? t('admin.orgsPage.noMatch') : t('admin.orgsPage.empty')}
                     </td>
                   </tr>
                 )}
@@ -346,7 +288,6 @@ export default function Organizations() {
         )}
       </div>
 
-      {/* Modal */}
       {modalOpen && (
         <OrgModal
           org={modalOrg}
